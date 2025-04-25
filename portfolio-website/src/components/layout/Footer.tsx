@@ -46,7 +46,7 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-bold mb-4">Contact</h3>
             <p className="text-sm mb-2">Dublin, Ireland</p>
-            <p className="text-sm mb-2">+353 87 170 0694</p>
+            <p className="text-sm mb-2">+no</p>
             <p className="text-sm">caitlinobltc@gmail.com</p>
             
             <div className="mt-4 flex space-x-4">
