@@ -8,15 +8,18 @@ import { Post } from '@/types/index';
 export default function Blog() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        setError(null);
         const response = await axios.get('/api/posts');
         setPosts(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching posts:', error);
+      } catch (err) {
+        console.error('Error fetching posts:', err);
+        setError('Failed to load blog posts. Please try again later.');
+      } finally {
         setLoading(false);
       }
     };
@@ -32,8 +35,8 @@ export default function Blog() {
       setPosts(posts.map(post => 
         post._id === id ? { ...post, likes: response.data.likes } : post
       ));
-    } catch (error) {
-      console.error('Error liking post:', error);
+    } catch (err) {
+      console.error('Error liking post:', err);
     }
   };
 
@@ -51,14 +54,17 @@ export default function Blog() {
           comments: [...post.comments, response.data] 
         } : post
       ));
-    } catch (error) {
-      console.error('Error adding comment:', error);
+    } catch (err) {
+      console.error('Error adding comment:', err);
     }
   };
 
   const handleShare = (id: string) => {
-    // Get the current URL
-    const url = window.location.origin + '/blog/' + posts.find(post => post._id === id)?.slug;
+    // Get the current URL and selected post slug
+    const post = posts.find(post => post._id === id);
+    if (!post) return;
+    
+    const url = `${window.location.origin}/blog/${post.slug}`;
     
     // Copy to clipboard
     navigator.clipboard.writeText(url)
@@ -66,7 +72,7 @@ export default function Blog() {
         alert('Blog post URL copied to clipboard!');
       })
       .catch(err => {
-        console.error('Could not copy URL: ', err);
+        console.error('Could not copy URL:', err);
       });
   };
 
@@ -83,6 +89,16 @@ export default function Blog() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               <p className="mt-2 text-gray-600">Loading blog posts...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 text-center">
+              <p>{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="mt-2 text-sm text-red-600 underline"
+              >
+                Refresh page
+              </button>
             </div>
           ) : posts.length > 0 ? (
             posts.map(post => (

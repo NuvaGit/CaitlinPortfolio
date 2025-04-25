@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Post from '@/models/Post';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 
 // GET a specific post by ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest, 
+  { params }: { params: { id: string } }
+) {
   try {
     await connectToDatabase();
     const post = await Post.findById(params.id).populate('author', 'name').exec();
@@ -16,12 +19,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     
     return NextResponse.json(post);
   } catch (error) {
+    console.error('Error fetching post:', error);
     return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });
   }
 }
 
 // PUT update a post (admin only)
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest, 
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -53,12 +60,16 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     
     return NextResponse.json(updatedPost);
   } catch (error) {
+    console.error('Error updating post:', error);
     return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
   }
 }
 
 // DELETE a post (admin only)
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest, 
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -71,6 +82,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     
     return NextResponse.json({ message: 'Post deleted successfully' });
   } catch (error) {
+    console.error('Error deleting post:', error);
     return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
   }
 }

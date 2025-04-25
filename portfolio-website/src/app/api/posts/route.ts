@@ -4,24 +4,48 @@ import Post from '@/models/Post';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
-// GET a specific post by ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+// GET all posts
+export async function GET(request: NextRequest) {
   try {
     await connectToDatabase();
-    const post = await Post.findById(params.id).populate('author', 'name').exec();
     
-    if (!post) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const tag = searchParams.get('tag');
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam ? parseInt(limitParam) : 10;
+    
+    // Build query
+    let query: any = { isPublished: true };
+    if (tag) {
+      query.tags = tag;
     }
     
-    return NextResponse.json(post);
+    // For admin users, show all posts including unpublished ones
+    const session = await getServerSession(authOptions);
+    if (session?.user.role === 'admin') {
+      delete query.isPublished;
+    }
+    
+    // Execute query with error handling
+    const posts = await Post.find(query)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate('author', 'name')
+      .exec();
+    
+    return NextResponse.json(posts);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch post' }, { status: 500 });
+    console.error('Error fetching posts:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch posts', details: error instanceof Error ? error.message : 'Unknown error' }, 
+      { status: 500 }
+    );
   }
 }
 
-// PUT update a post (admin only)
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+// POST create a new post (admin only)
+export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
@@ -31,46 +55,40 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     
     const body = await request.json();
     
-    await connectToDatabase();
-    
-    // If title was updated, update slug as well
-    if (body.title) {
-      body.slug = body.title
-        .toLowerCase()
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-');
+    if (!body.title || !body.content) {
+      return NextResponse.json(
+        { error: 'Title and content are required' }, 
+        { status: 400 }
+      );
     }
     
-    const updatedPost = await Post.findByIdAndUpdate(
-      params.id,
-      { ...body, updatedAt: Date.now() },
-      { new: true }
+    await connectToDatabase();
+    
+    // Create slug from title
+    const slug = body.title
+      .toLowerCase()
+      .replace(/[^\w\s]/gi, '')
+      .replace(/\s+/g, '-');
+    
+    // Create excerpt if not provided
+    const excerpt = body.excerpt || body.content.substring(0, 150) + '...';
+    
+    const post = await Post.create({
+      title: body.title,
+      slug,
+      content: body.content,
+      excerpt,
+      author: session.user.id,
+      tags: body.tags || [],
+      isPublished: body.isPublished !== undefined ? body.isPublished : true,
+    });
+    
+    return NextResponse.json(post, { status: 201 });
+  } catch (error) {
+    console.error('Error creating post:', error);
+    return NextResponse.json(
+      { error: 'Failed to create post', details: error instanceof Error ? error.message : 'Unknown error' }, 
+      { status: 500 }
     );
-    
-    if (!updatedPost) {
-      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
-    }
-    
-    return NextResponse.json(updatedPost);
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to update post' }, { status: 500 });
-  }
-}
-
-// DELETE a post (admin only)
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
-    await connectToDatabase();
-    await Post.findByIdAndDelete(params.id);
-    
-    return NextResponse.json({ message: 'Post deleted successfully' });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete post' }, { status: 500 });
   }
 }
