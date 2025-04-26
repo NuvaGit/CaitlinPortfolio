@@ -83,14 +83,14 @@ const Navbar = () => {
         <div
           className={`flex items-center justify-between backdrop-blur-sm transition-all duration-300 ease-in-out ${
             scrolled
-              ? 'h-14 rounded-xl border border-blue-600/30 shadow-lg bg-white/90 dark:bg-gray-800/90'
+              ? 'h-14 rounded-xl border border-blue-600/30 shadow-lg bg-blue-600/90 dark:bg-blue-700/90'
               : 'h-16 rounded-none border-0 bg-blue-800'
           }`}
         >
           {/* Branding */}
           <div className="flex items-center px-4">
             <Link href="/" className="flex items-center">
-              <span className={`font-bold transition-all duration-300 ${scrolled ? 'text-blue-600 text-base' : 'text-white text-lg'}`}>
+              <span className="font-bold transition-all duration-300 text-white text-lg">
                 Caitlin O'Brien
               </span>
             </Link>
@@ -103,9 +103,7 @@ const Navbar = () => {
                 key={item.name} 
                 href={item.href}
                 onClick={(e) => item.targetId ? handleNavLinkClick(e, item.targetId, item.isExternal, item.href) : undefined}
-                className={`text-sm font-medium px-3 py-2 rounded-md transition-all duration-300 ${
-                  scrolled ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50/50' : 'text-white hover:text-white hover:bg-white/20'
-                }`}
+                className="text-sm font-medium px-3 py-2 rounded-md transition-all duration-300 text-white hover:text-white hover:bg-white/20"
               >
                 {item.name}
               </Link>
@@ -114,11 +112,7 @@ const Navbar = () => {
             {/* Contact Button - Direct email link */}
             <a 
               href="mailto:caitlinobltc@gmail.com"
-              className={`font-medium text-sm px-4 py-2 rounded-md transition-all duration-300 ${
-                scrolled
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
+              className="font-medium text-sm px-4 py-2 rounded-md transition-all duration-300 bg-white/20 text-white hover:bg-white/30"
             >
               Get in Touch
             </a>
@@ -127,9 +121,7 @@ const Navbar = () => {
             {session?.user.role === 'admin' && (
               <Link 
                 href="/admin" 
-                className={`text-sm font-medium px-3 py-2 rounded-md transition-all duration-300 ${
-                  scrolled ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50/50' : 'text-white hover:text-white hover:bg-white/20'
-                }`}
+                className="text-sm font-medium px-3 py-2 rounded-md transition-all duration-300 text-white hover:text-white hover:bg-white/20"
               >
                 Admin
               </Link>
@@ -139,9 +131,7 @@ const Navbar = () => {
             {session?.user && (
               <button 
                 onClick={() => signOut()} 
-                className={`text-sm font-medium px-3 py-2 rounded-md transition-all duration-300 ${
-                  scrolled ? 'text-gray-700 hover:text-blue-600 hover:bg-blue-50/50' : 'text-white hover:text-white hover:bg-white/20'
-                }`}
+                className="text-sm font-medium px-3 py-2 rounded-md transition-all duration-300 text-white hover:text-white hover:bg-white/20"
               >
                 Sign Out
               </button>
@@ -153,9 +143,7 @@ const Navbar = () => {
             <button 
               type="button"
               aria-label="Toggle menu"
-              className={`inline-flex items-center justify-center rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${
-                scrolled ? 'text-gray-700 hover:bg-blue-50 hover:text-blue-600' : 'text-white hover:bg-white/20 hover:text-white'
-              }`}
+              className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               {isMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
@@ -167,14 +155,14 @@ const Navbar = () => {
       {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden mt-1 mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-blue-100 dark:border-gray-700 shadow-lg overflow-hidden">
+          <div className="bg-blue-600 dark:bg-blue-700 rounded-lg border border-blue-500 dark:border-blue-600 shadow-lg overflow-hidden">
             <div className="space-y-1 px-4 py-3">
               {navItems.map((item) => (
                 <Link 
                   key={item.name} 
                   href={item.href}
                   onClick={(e) => item.targetId ? handleNavLinkClick(e, item.targetId, item.isExternal, item.href) : undefined}
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-white"
+                  className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700/50 dark:hover:bg-blue-800/50"
                 >
                   {item.name}
                 </Link>
@@ -182,7 +170,7 @@ const Navbar = () => {
               
               <a 
                 href="mailto:caitlinobltc@gmail.com"
-                className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-white"
+                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700/50 dark:hover:bg-blue-800/50"
               >
                 Get in Touch
               </a>
@@ -190,7 +178,7 @@ const Navbar = () => {
               {session?.user.role === 'admin' && (
                 <Link 
                   href="/admin"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-white"
+                  className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700/50 dark:hover:bg-blue-800/50"
                 >
                   Admin
                 </Link>
@@ -199,7 +187,7 @@ const Navbar = () => {
               {session?.user && (
                 <button 
                   onClick={() => signOut()} 
-                  className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-white"
+                  className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700/50 dark:hover:bg-blue-800/50"
                 >
                   Sign Out
                 </button>
