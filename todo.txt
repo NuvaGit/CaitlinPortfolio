@@ -1,6 +1,6 @@
-ok so whats not working 
-the edit post button is not working 
-the image uplaod is not working 
-the blog section looks like shit right now 
-u can like infitily it should be one like per user per session maybe i add auth then but cba too complex for a low lvl project could remove these features all together 
+Admin uploads PDF -> Server extracts text and images -> Saves HTML/Markdown -> 
+Frontend renders blog post beautifully -> Users read clean posts!
 
+
+
+desired flow will finish tommorow cause fuck this 

@@ -33,7 +33,11 @@ const PostSchema = new Schema({
   featuredImage: String, // URL for featured image
   pdfUrl: {
     type: String,
-    required: false, // Making it optional
+    required: false, // Optional PDF URL
+  },
+  pdfText: {
+    type: String,
+    required: false, // Extracted PDF text
   },
   author: {
     type: Schema.Types.ObjectId,

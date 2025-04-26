@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import PDFTextExtractor from '@/components/blog/PDFTextExtractor';
 
 export default function NewPost() {
   const { data: session, status } = useSession();
@@ -21,6 +22,8 @@ export default function NewPost() {
   const [imageUploading, setImageUploading] = useState(false);
   const [pdfUploading, setPdfUploading] = useState(false);
   const [pdfFilename, setPdfFilename] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfText, setPdfText] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -61,6 +64,8 @@ export default function NewPost() {
 
     setPdfFile(file);
     setPdfFilename(file.name);
+    setPdfUrl(null); // Reset PDF URL when a new file is selected
+    setPdfText(null); // Reset PDF text when a new file is selected
   };
 
   const uploadImage = async () => {
@@ -112,6 +117,8 @@ export default function NewPost() {
       });
       
       if (response.data.url) {
+        // Store the PDF URL for extraction later
+        setPdfUrl(response.data.url);
         return response.data.url;
       } else {
         throw new Error('Failed to upload PDF');
@@ -122,6 +129,17 @@ export default function NewPost() {
       return null;
     } finally {
       setPdfUploading(false);
+    }
+  };
+
+  const handlePdfTextExtracted = (text: string) => {
+    setPdfText(text);
+    
+    // Append PDF text to the content or set it as the content
+    if (content.trim()) {
+      setContent(content + '\n\n' + text);
+    } else {
+      setContent(text);
     }
   };
 
@@ -161,6 +179,7 @@ export default function NewPost() {
         isPublished,
         featuredImage: imageUrl,
         pdfUrl: pdfUrl,
+        pdfText: pdfText,
       });
       
       router.push('/admin');
@@ -250,7 +269,7 @@ export default function NewPost() {
               )}
             </div>
             
-            {/* Add PDF upload */}
+            {/* PDF upload section */}
             <div>
               <label htmlFor="pdf-document" className="block text-sm font-medium text-gray-900 mb-1">
                 PDF Document (Optional)
@@ -275,6 +294,14 @@ export default function NewPost() {
                   <span className="ml-3 text-sm text-gray-900">{pdfFilename}</span>
                 )}
               </div>
+              
+              {/* PDF Text Extractor component */}
+              {pdfUrl && (
+                <PDFTextExtractor 
+                  pdfUrl={pdfUrl}
+                  onTextExtracted={handlePdfTextExtracted}
+                />
+              )}
             </div>
             
             <div>

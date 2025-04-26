@@ -6,7 +6,6 @@ import Link from 'next/link';
 import axios from 'axios';
 import { formatDistance } from 'date-fns';
 import { Post } from '@/types/index';
-import PDFViewer from '@/components/blog/PdfViewer';
 
 export default function BlogPost() {
   const params = useParams();
@@ -20,6 +19,7 @@ export default function BlogPost() {
   const [authorName, setAuthorName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [showPdfExtract, setShowPdfExtract] = useState(false);
 
   // Fetch post data and check if post is liked
   useEffect(() => {
@@ -127,6 +127,11 @@ export default function BlogPost() {
       });
   };
 
+  // Function to toggle between main content and PDF extract
+  const togglePdfExtract = () => {
+    setShowPdfExtract(!showPdfExtract);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -167,6 +172,9 @@ export default function BlogPost() {
   if (!post) {
     return null;
   }
+
+  // Determine if we have both regular content and PDF content
+  const hasBothContents = post.content && post.pdfText && post.content !== post.pdfText;
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-16">
@@ -234,24 +242,79 @@ export default function BlogPost() {
                 ))}
               </div>
             )}
+            
+            {/* Toggle between content and PDF extract if both exist */}
+            {hasBothContents && (
+              <div className="mb-4 flex justify-center">
+                <div className="inline-flex rounded-md shadow-sm" role="group">
+                  <button
+                    type="button"
+                    onClick={() => setShowPdfExtract(false)}
+                    className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
+                      !showPdfExtract 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    } border border-gray-300 focus:z-10 focus:ring-2 focus:ring-blue-500`}
+                  >
+                    Article
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowPdfExtract(true)}
+                    className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
+                      showPdfExtract 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                    } border border-gray-300 focus:z-10 focus:ring-2 focus:ring-blue-500`}
+                  >
+                    PDF Content
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Post Content */}
           <div className="bg-white rounded-xl shadow-md p-8 mb-8">
             <div className="prose prose-blue max-w-none">
-              {post.content.split('\n').map((paragraph, index) => (
-                paragraph ? <p key={index} className="mb-4">{paragraph}</p> : <br key={index} />
-              ))}
+              {/* Show either the regular content or the PDF extract based on the toggle */}
+              {(!hasBothContents || !showPdfExtract) && 
+                post.content.split('\n').map((paragraph, index) => (
+                  paragraph ? <p key={index} className="mb-4">{paragraph}</p> : <br key={index} />
+                ))
+              }
+              
+              {/* Show PDF extract if selected or if it's the only content */}
+              {(showPdfExtract || (!hasBothContents && post.pdfText)) && post.pdfText && 
+                post.pdfText.split('\n').map((paragraph, index) => (
+                  paragraph ? <p key={index} className="mb-4">{paragraph}</p> : <br key={index} />
+                ))
+              }
             </div>
             
-            {/* PDF Display Section */}
+            {/* PDF Download Link (if PDF is available) */}
             {post.pdfUrl && (
-              <div className="mt-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">Supporting Document</h3>
-                <PDFViewer 
-                  pdfUrl={post.pdfUrl} 
-                  title={`${post.title} - PDF Document`}
-                />
+              <div className="mt-8 p-4 bg-blue-50 rounded-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="h-8 w-8 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  <div>
+                    <h3 className="font-medium text-blue-900">Original Document</h3>
+                    <p className="text-sm text-blue-700">Download the original PDF</p>
+                  </div>
+                </div>
+                <a 
+                  href={post.pdfUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download PDF
+                </a>
               </div>
             )}
           </div>
