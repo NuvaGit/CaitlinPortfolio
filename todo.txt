@@ -1,3 +1,6 @@
-need to fix the blog posts in admin rn i must have changed something and you cannot 
-create posts ie theres no button also got to make sure that mongo db works i think it works by ips that can use mongo 
-db can create psosts so viewing is ok meaning this will only effect admin side if i cant fix 
+ok so whats not working 
+the edit post button is not working 
+the image uplaod is not working 
+the blog section looks like shit right now 
+u can like infitily it should be one like per user per session maybe i add auth then but cba too complex for a low lvl project could remove these features all together 
+
