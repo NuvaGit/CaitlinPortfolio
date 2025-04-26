@@ -1,4 +1,6 @@
-import React from 'react';
+"use client";
+
+import React, { useEffect, useRef } from 'react';
 
 const Experience = () => {
   const experiences = [
@@ -55,109 +57,269 @@ const Experience = () => {
       ]
     }
   ];
-    
+
+  // Refs for animation targets
+  const sectionRef = useRef(null);
+  const timelineRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
+  const educationRef = useRef(null);
+
+  // Set up refs for experience items
+  timelineRefs.current = experiences.map((_, i) => timelineRefs.current[i] || React.createRef());
+
+  useEffect(() => {
+    // Observer callback function
+    const observerCallback = (entries: IntersectionObserverEntry[], observer: IntersectionObserver) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-in');
+          // Don't unobserve to allow re-animation when scrolling in and out
+        } else {
+          // Remove animation class when out of view to allow re-animation
+          entry.target.classList.remove('animate-in');
+        }
+      });
+    };
+
+    // Create observer with options
+    const observer = new IntersectionObserver(observerCallback, {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1, // Trigger when at least 10% of the target is visible
+    });
+
+    // Observe timeline items
+    timelineRefs.current.forEach(ref => {
+      if (ref.current) {
+        observer.observe(ref.current);
+      }
+    });
+
+    // Observe education section
+    if (educationRef.current) {
+      observer.observe(educationRef.current);
+    }
+
+    // Clean up
+    return () => {
+      timelineRefs.current.forEach(ref => {
+        if (ref.current) {
+          observer.unobserve(ref.current);
+        }
+      });
+      if (educationRef.current) {
+        observer.unobserve(educationRef.current);
+      }
+    };
+  }, []);
+
   return (
-    <section className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-3">Professional Experience</h2>
-          <div className="w-20 h-1 bg-blue-600 mx-auto mb-6"></div>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+    <section className="py-24 bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 relative overflow-hidden" ref={sectionRef}>
+      {/* Abstract Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(15)].map((_, i) => (
+          <div 
+            key={i}
+            className="absolute rounded-full bg-white/5 blur-xl"
+            style={{
+              width: `${Math.random() * 400 + 100}px`,
+              height: `${Math.random() * 400 + 100}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${Math.random() * 10 + 15}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold mb-3 text-white tracking-tight">
+            Professional Experience
+          </h2>
+          <div className="w-24 h-1 bg-gradient-to-r from-pink-500 to-orange-400 rounded-full mx-auto mb-6"></div>
+          <p className="text-blue-100 max-w-2xl mx-auto text-lg">
             A snapshot of my professional journey in the legal field and beyond.
           </p>
         </div>
-        
+
         <div className="max-w-5xl mx-auto">
           <div className="relative">
             {/* Timeline vertical line */}
-            <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-blue-200"></div>
-            
+            <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-blue-400/40 via-purple-400/40 to-pink-400/40 rounded-full"></div>
+
             {experiences.map((exp, index) => (
-              <div key={index} className={`mb-12 md:mb-0 relative ${index === experiences.length - 1 ? '' : 'pb-12'}`}>
+              <div 
+                key={index} 
+                ref={timelineRefs.current[index]}
+                className={`mb-20 md:mb-24 relative animate-item opacity-0 ${index % 2 === 0 ? 'slide-right' : 'slide-left'}`}
+              >
                 <div className={`flex items-center justify-between md:justify-normal ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} flex-col md:flex-row`}>
-                  {/* Timeline dot */}
-                  <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full bg-blue-600 border-4 border-white shadow"></div>
-                  
-                  {/* Content */}
-                  <div className={`md:w-[calc(50%-2rem)] p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 ${index % 2 === 0 ? 'md:mr-10' : 'md:ml-10'} w-full`}>
-                    <div className="mb-3">
-                      <span className="inline-block px-2 py-1 text-xs font-semibold text-blue-800 bg-blue-100 rounded-full mb-2">
-                        {exp.period}
-                      </span>
-                      <h3 className="text-xl font-bold text-gray-800">{exp.role}</h3>
-                      <p className="text-blue-600 font-medium">{exp.company}</p>
-                    </div>
-                    
-                    <p className="text-gray-700 mb-4">{exp.description}</p>
-                    
-                    <div>
-                      <h4 className="font-medium text-gray-800 mb-2">Key Responsibilities:</h4>
-                      <ul className="space-y-2">
-                        {exp.responsibilities.map((resp, i) => (
-                          <li key={i} className="flex items-start">
-                            <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            <span>{resp}</span>
-                          </li>
-                        ))}
-                      </ul>
+                  {/* Timeline dot with pulse animation */}
+                  <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 animate-pulse"></div>
+                    <div className="absolute w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 border-2 border-white"></div>
+                  </div>
+
+                  {/* Content Card */}
+                  <div 
+                    className={`md:w-[calc(50%-2rem)] rounded-xl overflow-hidden transform transition-all duration-500 ${
+                      index % 2 === 0 ? 'md:mr-10' : 'md:ml-10'
+                    } w-full card-animate`}
+                  >
+                    <div className="bg-white/10 backdrop-blur-md p-6 rounded-xl hover:bg-white/15 transition-all duration-300 shadow-xl border border-white/10">
+                      <div className="mb-4">
+                        <span className="inline-block px-3 py-1 text-xs font-semibold text-blue-100 bg-blue-500/30 rounded-full mb-3">
+                          {exp.period}
+                        </span>
+                        <h3 className="text-2xl font-bold text-white mb-1">{exp.role}</h3>
+                        <p className="text-blue-200 font-medium">{exp.company}</p>
+                      </div>
+                      <p className="text-blue-100 mb-5">{exp.description}</p>
+                      <div className="space-y-3">
+                        <h4 className="font-medium text-white mb-3 text-lg">Key Responsibilities:</h4>
+                        <ul className="space-y-3">
+                          {exp.responsibilities.map((resp, i) => (
+                            <li key={i} className="flex items-start responsibility-item opacity-0" style={{ animationDelay: `${i * 0.1 + 0.2}s` }}>
+                              <div className="flex-shrink-0 mt-1 mr-3 w-5 h-5 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 flex items-center justify-center">
+                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                              </div>
+                              <span className="text-blue-50">{resp}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          
-          <div className="mt-16">
-            <div className="bg-blue-50 rounded-xl p-8 shadow-lg border border-blue-100">
-              <h2 className="text-2xl font-bold mb-6 text-center text-blue-800">Education</h2>
+
+          <div className="mt-20" ref={educationRef}>
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-8 shadow-xl border border-white/10 education-card opacity-0">
+              <div className="flex items-center justify-center mb-6">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-4">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-white">Education</h2>
+              </div>
               
-              <div className="bg-white p-6 rounded-lg shadow-md">
+              <div className="bg-white/5 p-6 rounded-lg hover:bg-white/10 transition-all duration-300">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-4">
                   <div>
-                    <h3 className="text-xl font-bold">Bachelor of Law with Politics (BCL)</h3>
-                    <p className="text-blue-600 font-medium">University College Dublin</p>
+                    <h3 className="text-xl font-bold text-white">Bachelor of Law with Politics (BCL)</h3>
+                    <p className="text-blue-200 font-medium">University College Dublin</p>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1 md:mt-0">2020 - 2024</p>
+                  <p className="text-sm text-blue-200 mt-1 md:mt-0 md:ml-4">2020 - 2024</p>
                 </div>
-                
-                <div className="mt-4">
-                  <h4 className="font-medium text-gray-800 mb-2">Key Achievements:</h4>
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <li className="flex items-start">
-                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                      <span>Member of the UCD Law Society Moot Court Competition Team</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                      <span>Published research paper on property law reforms in Ireland</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                      <span>Dean's List for Academic Excellence (2022, 2023)</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                      </svg>
-                      <span>Volunteered with the UCD Student Legal Service Clinic</span>
-                    </li>
-                  </ul>
+                <div className="mt-6">
+                  <h4 className="font-medium text-white mb-4 text-lg">Key Achievements:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      "Member of the UCD Law Society Moot Court Competition Team",
+                      "Published research paper on property law reforms in Ireland",
+                      "Dean's List for Academic Excellence (2022, 2023)",
+                      "Volunteered with the UCD Student Legal Service Clinic"
+                    ].map((achievement, i) => (
+                      <div key={i} className="achievement-item opacity-0 flex" style={{ animationDelay: `${i * 0.15}s` }}>
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-3 mt-0.5">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                          </svg>
+                        </div>
+                        <span className="text-blue-50">{achievement}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* CSS for animations */}
+      <style jsx>{`
+        @keyframes fadeSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes fadeSlideRight {
+          from {
+            opacity: 0;
+            transform: translateX(-50px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes fadeSlideLeft {
+          from {
+            opacity: 0;
+            transform: translateX(50px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes popIn {
+          0% {
+            opacity: 0;
+            transform: scale(0.6);
+          }
+          70% {
+            opacity: 1;
+            transform: scale(1.05);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        
+        .slide-right.animate-in {
+          animation: fadeSlideRight 0.7s forwards ease-out;
+        }
+        
+        .slide-left.animate-in {
+          animation: fadeSlideLeft 0.7s forwards ease-out;
+        }
+        
+        .animate-in .responsibility-item {
+          animation: fadeSlideUp 0.5s forwards ease-out;
+        }
+        
+        .education-card.animate-in {
+          animation: popIn 0.8s forwards cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .animate-in .achievement-item {
+          animation: fadeSlideUp 0.6s forwards ease-out;
+        }
+        
+        /* Pre-animation states */
+        .responsibility-item, .achievement-item {
+          opacity: 0;
+        }
+      `}</style>
     </section>
   );
 };
-  
+
 export default Experience;
