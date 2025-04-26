@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import BlogCard from '@/components/blog/BlogCard';
+import Link from 'next/link';
 import { Post } from '@/types/index';
+import { formatDistance } from 'date-fns';
 
 export default function Blog() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -11,31 +12,22 @@ export default function Blog() {
   const [error, setError] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
-  const [likedPosts, setLikedPosts] = useState<string[]>([]);
-
-  // Load liked posts from session storage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const liked = JSON.parse(sessionStorage.getItem('likedPosts') || '[]');
-      setLikedPosts(liked);
-    }
-  }, []);
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setError(null);
-        const response = await axios.get('/api/posts');
+        const response = await axios.get<Post[]>('/api/posts');
         setPosts(response.data);
         
         // Extract all unique tags
         const allTags = response.data.flatMap((post: Post) => 
           Array.isArray(post.tags) ? post.tags : []
         );
-        setTags([...new Set(allTags)] as string[]);
+        setTags([...new Set(allTags)]);
       } catch (err) {
         console.error('Error fetching posts:', err);
-        setError('Failed to load blog posts. Please try again later.');
+        setError('Failed to load articles. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -44,70 +36,13 @@ export default function Blog() {
     fetchPosts();
   }, []);
 
-  // Track liked posts in session storage
-  const hasLikedPost = (postId: string): boolean => {
-    return likedPosts.includes(postId);
-  };
-
-  // Updated handleLike function
-  const handleLike = async (id: string) => {
-    // Check if post is already liked in this session
-    if (hasLikedPost(id)) {
-      alert("You've already liked this post!");
-      return;
-    }
-
+  // Format the createdAt date safely
+  const formatDate = (dateString: string) => {
     try {
-      const response = await axios.put(`/api/posts/${id}/like`);
-      
-      // Update the posts state with the updated like count
-      setPosts(posts.map(post => 
-        post._id === id ? { ...post, likes: response.data.likes } : post
-      ));
-      
-      // Save post ID to session storage
-      const updatedLikedPosts = [...likedPosts, id];
-      sessionStorage.setItem('likedPosts', JSON.stringify(updatedLikedPosts));
-      setLikedPosts(updatedLikedPosts);
-    } catch (err) {
-      console.error('Error liking post:', err);
+      return formatDistance(new Date(dateString), new Date(), { addSuffix: true });
+    } catch (error) {
+      return 'recently';
     }
-  };
-
-  const handleComment = async (id: string, content: string, author: string) => {
-    try {
-      const response = await axios.post(`/api/posts/${id}/comment`, {
-        content,
-        author,
-      });
-      
-      // Update the posts state with the new comment
-      setPosts(posts.map(post => 
-        post._id === id ? { 
-          ...post, 
-          comments: [...post.comments, response.data] 
-        } : post
-      ));
-    } catch (err) {
-      console.error('Error adding comment:', err);
-    }
-  };
-
-  const handleShare = (id: string) => {
-    // Get the current URL and selected post slug
-    const post = posts.find(post => post._id === id);
-    if (!post) return;
-    
-    const url = `${window.location.origin}/blog/${post.slug}`;
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(url)
-      .then(() => {
-        alert('Blog post URL copied to clipboard!');
-      })
-      .catch(err => {
-        console.error('Could not copy URL:', err);
-      });
   };
 
   // Filter posts by tag if a tag is selected
@@ -120,9 +55,9 @@ export default function Blog() {
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Blog</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Articles</h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Thoughts and insights on law, property, and professional development.
+              Research and insights on law, property, and professional development.
             </p>
             
             {/* Tags filter */}
@@ -137,7 +72,7 @@ export default function Blog() {
                         : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                     }`}
                   >
-                    All Posts
+                    All Articles
                   </button>
                   
                   {tags.map((tag) => (
@@ -166,7 +101,7 @@ export default function Blog() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               </div>
-              <p className="text-lg text-gray-600">Loading blog posts...</p>
+              <p className="text-lg text-gray-600">Loading articles...</p>
             </div>
           ) : error ? (
             <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-6 text-center my-8">
@@ -189,36 +124,83 @@ export default function Blog() {
               {activeTag && (
                 <div className="mb-8 text-center">
                   <p className="text-lg text-gray-600">
-                    Showing posts tagged with <span className="font-semibold text-blue-600">{activeTag}</span>
+                    Showing articles tagged with <span className="font-semibold text-blue-600">{activeTag}</span>
                   </p>
                 </div>
               )}
               
-              {filteredPosts.map(post => (
-                <BlogCard 
-                  key={post._id} 
-                  post={post} 
-                  onLike={handleLike}
-                  onComment={handleComment}
-                  onShare={handleShare}
-                  isLiked={hasLikedPost(post._id)}
-                />
-              ))}
+              <div className="space-y-6">
+                {filteredPosts.map(post => (
+                  <Link 
+                    key={post._id} 
+                    href={`/blog/${post.slug}`}
+                    className="block bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-100 transform hover:-translate-y-1"
+                  >
+                    <div className="flex flex-col md:flex-row">
+                      {post.featuredImage && (
+                        <div className="md:w-1/4 h-48 md:h-auto">
+                          <img 
+                            src={post.featuredImage} 
+                            alt={post.title} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      
+                      <div className={`p-6 ${post.featuredImage ? 'md:w-3/4' : 'w-full'}`}>
+                        <div className="flex items-center text-sm text-gray-500 mb-2">
+                          <span className="flex items-center">
+                            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {formatDate(post.createdAt)}
+                          </span>
+                          
+                          <span className="mx-2">•</span>
+                          
+                          <span className="flex items-center">
+                            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            PDF Article
+                          </span>
+                        </div>
+                        
+                        <h3 className="text-xl font-bold mb-2 text-gray-800 group-hover:text-blue-600">{post.title}</h3>
+                        
+                        {post.content && (
+                          <p className="text-gray-600 mb-4 line-clamp-2">{post.content}</p>
+                        )}
+                        
+                        {post.tags && post.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {post.tags.map((tag, index) => (
+                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </>
           ) : (
             <div className="bg-white shadow-md rounded-lg p-12 text-center">
               {activeTag ? (
                 <>
-                  <p className="text-xl text-gray-600 mb-4">No blog posts found with the tag <span className="font-semibold text-blue-600">{activeTag}</span>.</p>
+                  <p className="text-xl text-gray-600 mb-4">No articles found with the tag <span className="font-semibold text-blue-600">{activeTag}</span>.</p>
                   <button
                     onClick={() => setActiveTag(null)}
                     className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
-                    View all posts
+                    View all articles
                   </button>
                 </>
               ) : (
-                <p className="text-xl text-gray-600">No blog posts found.</p>
+                <p className="text-xl text-gray-600">No articles found.</p>
               )}
             </div>
           )}

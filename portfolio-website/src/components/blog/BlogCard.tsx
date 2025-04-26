@@ -2,7 +2,7 @@
 
 import { formatDistance } from 'date-fns';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Post } from '@/types/index';
 
 interface BlogCardProps {
@@ -10,14 +10,33 @@ interface BlogCardProps {
   onLike: (id: string) => void;
   onComment: (id: string, comment: string, author: string) => Promise<void>;
   onShare: (id: string) => void;
-  isLiked?: boolean;
 }
 
-const BlogCard = ({ post, onLike, onComment, onShare, isLiked = false }: BlogCardProps) => {
+const BlogCard = ({ post, onLike, onComment, onShare }: BlogCardProps) => {
   const [comment, setComment] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [showComments, setShowComments] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  
+  // Check if post is already liked in this session
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const likedPosts = JSON.parse(sessionStorage.getItem('likedPosts') || '[]');
+      setIsLiked(likedPosts.includes(post._id));
+    }
+  }, [post._id]);
+  
+  const handleLike = () => {
+    if (isLiked) return; // Prevent multiple likes
+    
+    onLike(post._id);
+    
+    // Update local state and session storage
+    setIsLiked(true);
+    const likedPosts = JSON.parse(sessionStorage.getItem('likedPosts') || '[]');
+    sessionStorage.setItem('likedPosts', JSON.stringify([...likedPosts, post._id]));
+  };
   
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,10 +106,27 @@ const BlogCard = ({ post, onLike, onComment, onShare, isLiked = false }: BlogCar
         
         <p className="text-gray-700 mb-6 leading-relaxed">{previewContent}</p>
         
+        {/* PDF download link if available */}
+        {post.pdfUrl && (
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg flex items-center">
+            <svg className="h-5 w-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            <a 
+              href={post.pdfUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
+            >
+              Download PDF Document
+            </a>
+          </div>
+        )}
+        
         <div className="flex items-center justify-between pt-4 border-t border-gray-100">
           <div className="flex space-x-6">
             <button 
-              onClick={() => onLike(post._id)} 
+              onClick={handleLike} 
               disabled={isLiked}
               className={`flex items-center space-x-1 transition-colors duration-300 ${
                 isLiked 

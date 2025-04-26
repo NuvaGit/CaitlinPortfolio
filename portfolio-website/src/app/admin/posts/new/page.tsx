@@ -16,10 +16,14 @@ export default function NewPost() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
+  const [pdfUploading, setPdfUploading] = useState(false);
+  const [pdfFilename, setPdfFilename] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   if (status === 'loading') {
     return (
@@ -49,6 +53,14 @@ export default function NewPost() {
       setImagePreview(reader.result as string);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPdfFile(file);
+    setPdfFilename(file.name);
   };
 
   const uploadImage = async () => {
@@ -82,6 +94,37 @@ export default function NewPost() {
     }
   };
 
+  const uploadPdf = async () => {
+    if (!pdfFile) return null;
+    
+    setPdfUploading(true);
+    
+    try {
+      // Create form data
+      const formData = new FormData();
+      formData.append('file', pdfFile);
+      
+      // Use our secure server-side API route for PDFs
+      const response = await axios.post('/api/upload-pdf', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      if (response.data.url) {
+        return response.data.url;
+      } else {
+        throw new Error('Failed to upload PDF');
+      }
+    } catch (error) {
+      console.error('Error uploading PDF:', error);
+      setError('Failed to upload PDF. Please try again.');
+      return null;
+    } finally {
+      setPdfUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -89,12 +132,23 @@ export default function NewPost() {
 
     try {
       let imageUrl = null;
+      let pdfUrl = null;
       
       if (imageFile) {
         imageUrl = await uploadImage();
         if (!imageUrl && imageFile) {
           setLoading(false);
-          return; // Stop if image upload failed
+          setError('Image upload failed. Please try again.');
+          return;
+        }
+      }
+      
+      if (pdfFile) {
+        pdfUrl = await uploadPdf();
+        if (!pdfUrl && pdfFile) {
+          setLoading(false);
+          setError('PDF upload failed. Please try again.');
+          return;
         }
       }
       
@@ -106,6 +160,7 @@ export default function NewPost() {
         tags: tagsArray,
         isPublished,
         featuredImage: imageUrl,
+        pdfUrl: pdfUrl,
       });
       
       router.push('/admin');
@@ -195,6 +250,33 @@ export default function NewPost() {
               )}
             </div>
             
+            {/* Add PDF upload */}
+            <div>
+              <label htmlFor="pdf-document" className="block text-sm font-medium text-gray-900 mb-1">
+                PDF Document (Optional)
+              </label>
+              <div className="mt-1 flex items-center">
+                <input
+                  type="file"
+                  id="pdf-document"
+                  ref={pdfInputRef}
+                  accept=".pdf"
+                  onChange={handlePdfChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => pdfInputRef.current?.click()}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  {pdfFile ? 'Change PDF' : 'Upload PDF'}
+                </button>
+                {pdfFilename && (
+                  <span className="ml-3 text-sm text-gray-900">{pdfFilename}</span>
+                )}
+              </div>
+            </div>
+            
             <div>
               <label htmlFor="tags" className="block text-sm font-medium text-gray-900 mb-1">
                 Tags (comma separated)
@@ -233,16 +315,16 @@ export default function NewPost() {
             </button>
             <button
               type="submit"
-              disabled={loading || imageUploading}
+              disabled={loading || imageUploading || pdfUploading}
               className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75"
             >
-              {(loading || imageUploading) ? (
+              {(loading || imageUploading || pdfUploading) ? (
                 <>
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  {imageUploading ? 'Uploading Image...' : 'Creating Post...'}
+                  {imageUploading ? 'Uploading Image...' : pdfUploading ? 'Uploading PDF...' : 'Creating Post...'}
                 </>
               ) : 'Create Post'}
             </button>

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import axios from 'axios';
 import { formatDistance } from 'date-fns';
 import { Post } from '@/types/index';
+import PDFViewer from '@/components/blog/PdfViewer';
 
 export default function BlogPost() {
   const params = useParams();
@@ -18,17 +19,9 @@ export default function BlogPost() {
   const [comment, setComment] = useState('');
   const [authorName, setAuthorName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [isLiked, setIsLiked] = useState(false);
 
-  // Load liked posts from session storage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const liked = JSON.parse(sessionStorage.getItem('likedPosts') || '[]');
-      setLikedPosts(liked);
-    }
-  }, []);
-
-  // Fetch post data
+  // Fetch post data and check if post is liked
   useEffect(() => {
     const fetchPost = async () => {
       try {
@@ -39,6 +32,12 @@ export default function BlogPost() {
         
         if (foundPost) {
           setPost(foundPost);
+          
+          // Check if this post has been liked in this session
+          if (typeof window !== 'undefined') {
+            const likedPosts = JSON.parse(sessionStorage.getItem('likedPosts') || '[]');
+            setIsLiked(likedPosts.includes(foundPost._id));
+          }
         } else {
           setError('Post not found');
           setTimeout(() => {
@@ -66,14 +65,8 @@ export default function BlogPost() {
   };
   
   const handleLike = async () => {
-    if (!post) return;
+    if (!post || isLiked) return;
     
-    // Check if post is already liked in this session
-    if (likedPosts.includes(post._id)) {
-      alert("You've already liked this post!");
-      return;
-    }
-
     try {
       const response = await axios.put(`/api/posts/${post._id}/like`);
       
@@ -84,9 +77,9 @@ export default function BlogPost() {
       });
       
       // Save post ID to session storage
-      const updatedLikedPosts = [...likedPosts, post._id];
-      sessionStorage.setItem('likedPosts', JSON.stringify(updatedLikedPosts));
-      setLikedPosts(updatedLikedPosts);
+      setIsLiked(true);
+      const likedPosts = JSON.parse(sessionStorage.getItem('likedPosts') || '[]');
+      sessionStorage.setItem('likedPosts', JSON.stringify([...likedPosts, post._id]));
     } catch (err) {
       console.error('Error liking post:', err);
     }
@@ -250,6 +243,17 @@ export default function BlogPost() {
                 paragraph ? <p key={index} className="mb-4">{paragraph}</p> : <br key={index} />
               ))}
             </div>
+            
+            {/* PDF Display Section */}
+            {post.pdfUrl && (
+              <div className="mt-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Supporting Document</h3>
+                <PDFViewer 
+                  pdfUrl={post.pdfUrl} 
+                  title={`${post.title} - PDF Document`}
+                />
+              </div>
+            )}
           </div>
           
           {/* Post Actions */}
@@ -258,9 +262,9 @@ export default function BlogPost() {
               <div className="flex space-x-6">
                 <button 
                   onClick={handleLike} 
-                  disabled={likedPosts.includes(post._id)}
+                  disabled={isLiked}
                   className={`flex items-center space-x-1 transition-colors duration-300 ${
-                    likedPosts.includes(post._id) 
+                    isLiked 
                       ? 'text-pink-500 cursor-not-allowed' 
                       : 'text-gray-600 hover:text-pink-500'
                   }`}
@@ -268,7 +272,7 @@ export default function BlogPost() {
                   <svg 
                     xmlns="http://www.w3.org/2000/svg" 
                     className="h-6 w-6" 
-                    fill={likedPosts.includes(post._id) ? "currentColor" : "none"} 
+                    fill={isLiked ? "currentColor" : "none"} 
                     viewBox="0 0 24 24" 
                     stroke="currentColor"
                   >

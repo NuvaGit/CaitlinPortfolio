@@ -19,7 +19,8 @@ export interface Post {
   slug: string;
   content: string;
   excerpt?: string;
-  featuredImage?: string; // Added field for featured image URL
+  featuredImage?: string;
+  pdfUrl?: string; // Added PDF URL field
   author: string | User;
   tags?: string[];
   likes: number;

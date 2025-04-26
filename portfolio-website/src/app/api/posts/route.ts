@@ -81,6 +81,8 @@ export async function POST(request: NextRequest) {
       author: session.user.id,
       tags: body.tags || [],
       isPublished: body.isPublished !== undefined ? body.isPublished : true,
+      featuredImage: body.featuredImage || null,
+      pdfUrl: body.pdfUrl || null, // Add optional pdfUrl field
     });
     
     return NextResponse.json(post, { status: 201 });

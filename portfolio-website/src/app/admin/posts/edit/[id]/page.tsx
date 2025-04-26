@@ -19,11 +19,16 @@ export default function EditPost({ params }: { params: { id: string } }) {
   const [error, setError] = useState('');
   const [fetchingPost, setFetchingPost] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
+  const [pdfUploading, setPdfUploading] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const [currentPdfUrl, setCurrentPdfUrl] = useState<string | null>(null);
+  const [pdfFilename, setPdfFilename] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch the post data
   useEffect(() => {
@@ -52,9 +57,16 @@ export default function EditPost({ params }: { params: { id: string } }) {
         
         setIsPublished(post.isPublished);
         setCurrentImageUrl(post.featuredImage || null);
+        setCurrentPdfUrl(post.pdfUrl || null);
         
         if (post.featuredImage) {
           setImagePreview(post.featuredImage);
+        }
+        
+        // Extract PDF filename from URL if available
+        if (post.pdfUrl) {
+          const urlParts = post.pdfUrl.split('/');
+          setPdfFilename(urlParts[urlParts.length - 1]);
         }
         
         setFetchingPost(false);
@@ -97,6 +109,14 @@ export default function EditPost({ params }: { params: { id: string } }) {
     reader.readAsDataURL(file);
   };
 
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPdfFile(file);
+    setPdfFilename(file.name);
+  };
+
   const uploadImage = async () => {
     if (!imageFile) return currentImageUrl; // If no new image, return existing URL
     
@@ -128,6 +148,37 @@ export default function EditPost({ params }: { params: { id: string } }) {
     }
   };
 
+  const uploadPdf = async () => {
+    if (!pdfFile) return currentPdfUrl; // If no new PDF, return existing URL
+    
+    setPdfUploading(true);
+    
+    try {
+      // Create form data
+      const formData = new FormData();
+      formData.append('file', pdfFile);
+      
+      // Use our secure server-side API route for PDFs
+      const response = await axios.post('/api/upload-pdf', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      if (response.data.url) {
+        return response.data.url;
+      } else {
+        throw new Error('Failed to upload PDF');
+      }
+    } catch (error) {
+      console.error('Error uploading PDF:', error);
+      setError('Failed to upload PDF. Please try again.');
+      return currentPdfUrl; // Return current URL if upload fails
+    } finally {
+      setPdfUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -135,9 +186,24 @@ export default function EditPost({ params }: { params: { id: string } }) {
 
     try {
       let imageUrl = currentImageUrl;
+      let pdfUrl = currentPdfUrl;
       
       if (imageFile) {
         imageUrl = await uploadImage();
+        if (!imageUrl && imageFile) {
+          setLoading(false);
+          setError('Image upload failed. Please try again.');
+          return;
+        }
+      }
+      
+      if (pdfFile) {
+        pdfUrl = await uploadPdf();
+        if (!pdfUrl && pdfFile) {
+          setLoading(false);
+          setError('PDF upload failed. Please try again.');
+          return;
+        }
       }
       
       const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
@@ -148,6 +214,7 @@ export default function EditPost({ params }: { params: { id: string } }) {
         tags: tagsArray,
         isPublished,
         featuredImage: imageUrl,
+        pdfUrl: pdfUrl,
       });
       
       router.push('/admin');
@@ -240,6 +307,49 @@ export default function EditPost({ params }: { params: { id: string } }) {
               )}
             </div>
             
+            {/* Add PDF upload */}
+            <div>
+              <label htmlFor="pdf-document" className="block text-sm font-medium text-gray-900 mb-1">
+                PDF Document (Optional)
+              </label>
+              <div className="mt-1 flex items-center">
+                <input
+                  type="file"
+                  id="pdf-document"
+                  ref={pdfInputRef}
+                  accept=".pdf"
+                  onChange={handlePdfChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => pdfInputRef.current?.click()}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  {pdfFile ? 'Change PDF' : currentPdfUrl ? 'Replace PDF' : 'Upload PDF'}
+                </button>
+                {pdfFile && (
+                  <span className="ml-3 text-sm text-gray-900">{pdfFile.name}</span>
+                )}
+                {currentPdfUrl && !pdfFile && (
+                  <span className="ml-3 text-sm text-gray-900">{pdfFilename || 'Current PDF'}</span>
+                )}
+              </div>
+              
+              {currentPdfUrl && !pdfFile && (
+                <div className="mt-2">
+                  <a 
+                    href={currentPdfUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    View current PDF
+                  </a>
+                </div>
+              )}
+            </div>
+            
             <div>
               <label htmlFor="tags" className="block text-sm font-medium text-gray-900 mb-1">
                 Tags (comma separated)
@@ -278,16 +388,16 @@ export default function EditPost({ params }: { params: { id: string } }) {
             </button>
             <button
               type="submit"
-              disabled={loading || imageUploading}
+              disabled={loading || imageUploading || pdfUploading}
               className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75"
             >
-              {(loading || imageUploading) ? (
+              {(loading || imageUploading || pdfUploading) ? (
                 <>
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  {imageUploading ? 'Uploading Image...' : 'Updating Post...'}
+                  {imageUploading ? 'Uploading Image...' : pdfUploading ? 'Uploading PDF...' : 'Updating Post...'}
                 </>
               ) : 'Update Post'}
             </button>
