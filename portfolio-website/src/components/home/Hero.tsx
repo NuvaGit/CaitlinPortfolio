@@ -19,7 +19,7 @@ return (
                         property management, and a passion for making positive societal change.
                     </p>
                     <div className="flex flex-wrap gap-4">
-                        <Link href="/about" className="bg-teal-600 hover:bg-opacity-80 transition text-white px-6 py-3 rounded-md font-medium">
+                        <Link href="#about" className="bg-teal-600 hover:bg-opacity-80 transition text-white px-6 py-3 rounded-md font-medium">
                             About Me
                         </Link>
                         <Link href="/contact" className="bg-transparent hover:bg-white hover:text-blue-800 transition text-white border-2 border-white px-6 py-3 rounded-md font-medium">

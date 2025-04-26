@@ -11,7 +11,7 @@ interface NavItem {
   name: string;
   href: string;
   targetId?: string;
-  isExternal?: boolean;
+  isExternal?: boolean; 
 }
 
 const Navbar = () => {
@@ -111,10 +111,9 @@ const Navbar = () => {
               </Link>
             ))}
             
-            {/* Contact Button */}
-            <Link 
-              href="#contact" 
-              onClick={(e) => handleNavLinkClick(e, 'contact', false, '#contact')}
+            {/* Contact Button - Direct email link */}
+            <a 
+              href="mailto:caitlinobltc@gmail.com"
               className={`font-medium text-sm px-4 py-2 rounded-md transition-all duration-300 ${
                 scrolled
                   ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40'
@@ -122,7 +121,7 @@ const Navbar = () => {
               }`}
             >
               Get in Touch
-            </Link>
+            </a>
             
             {/* Admin Link (if admin) */}
             {session?.user.role === 'admin' && (
@@ -181,13 +180,12 @@ const Navbar = () => {
                 </Link>
               ))}
               
-              <Link 
-                href="#contact"
-                onClick={(e) => handleNavLinkClick(e, 'contact', false, '#contact')}
+              <a 
+                href="mailto:caitlinobltc@gmail.com"
                 className="block rounded-md px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-white"
               >
                 Get in Touch
-              </Link>
+              </a>
               
               {session?.user.role === 'admin' && (
                 <Link 
