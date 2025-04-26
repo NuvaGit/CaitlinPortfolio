@@ -22,6 +22,7 @@ const Navbar = () => {
   const router = useRouter();
   const isHomePage = pathname === '/';
 
+  // Handle scroll events
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 80);
@@ -30,9 +31,29 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close menu on navigation
   useEffect(() => {
     setIsMenuOpen(false);
   }, [pathname]);
+
+  // Add custom animations to the document
+  useEffect(() => {
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
+      @keyframes slideDown {
+        0% { transform: translateY(-10px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+      }
+      @keyframes fadeIn {
+        0% { opacity: 0; transform: translateY(-5px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+    `;
+    document.head.appendChild(styleEl);
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
 
   const scrollToSection = (elementId: string): void => {
     const element = document.getElementById(elementId);
@@ -78,20 +99,21 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'top-4' : 'top-0'}`}>
-      <div className={`mx-auto transition-all duration-300 ${scrolled ? 'max-w-6xl px-4 sm:px-6 py-2' : 'max-w-full px-0 py-0'}`}>
+    <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'top-4' : 'top-0'}`} style={{animation: scrolled ? 'slideDown 0.5s ease-out' : 'none'}}>
+      <div className={`mx-auto transition-all duration-500 ${scrolled ? 'max-w-6xl px-4 sm:px-6 py-2' : 'max-w-full px-0 py-0'}`}>
         <div
           className={`flex items-center justify-between backdrop-blur-sm transition-all duration-300 ease-in-out ${
             scrolled
-              ? 'h-14 rounded-xl border border-blue-600/30 shadow-lg bg-blue-600/90 dark:bg-blue-700/90'
-              : 'h-16 rounded-none border-0 bg-blue-800'
+              ? 'h-14 rounded-xl border border-gray-500/30 shadow-lg bg-gray-800/90 dark:bg-gray-900/95'
+              : 'h-16 rounded-none border-0 bg-gray-800'
           }`}
         >
           {/* Branding */}
-          <div className="flex items-center px-4">
+          <div className="flex items-center px-6">
             <Link href="/" className="flex items-center">
-              <span className="font-bold transition-all duration-300 text-white text-lg">
-                Caitlin O'Brien
+              <span className="font-bold transition-all duration-300 text-white text-xl tracking-wide relative overflow-hidden group">
+                <span className="bg-clip-text bg-gradient-to-r from-blue-300 to-purple-400 hover:from-blue-200 hover:to-purple-300 transition-all duration-500">Caitlin O'Brien</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-500 group-hover:w-full transition-all duration-500 ease-in-out"></span>
               </span>
             </Link>
           </div>
@@ -103,25 +125,26 @@ const Navbar = () => {
                 key={item.name} 
                 href={item.href}
                 onClick={(e) => item.targetId ? handleNavLinkClick(e, item.targetId, item.isExternal, item.href) : undefined}
-                className="text-sm font-medium px-3 py-2 rounded-md transition-all duration-300 text-white hover:text-white hover:bg-white/20"
+                className="relative text-sm font-medium px-3 py-2 rounded-md transition-all duration-300 text-white hover:text-blue-200 group"
               >
                 {item.name}
+                <span className="absolute bottom-0 left-1/2 w-0 h-0.5 bg-blue-400 group-hover:w-4/5 group-hover:left-[10%] transition-all duration-300 ease-out"></span>
               </Link>
             ))}
             
             {/* Contact Button - Direct email link */}
             <a 
               href="mailto:caitlinobltc@gmail.com"
-              className="font-medium text-sm px-4 py-2 rounded-md transition-all duration-300 bg-white/20 text-white hover:bg-white/30"
+              className="font-medium text-sm px-5 py-2 rounded-md transition-all duration-500 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-md hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 mr-3"
             >
               Get in Touch
             </a>
             
             {/* Admin Link (if admin) */}
-            {session?.user.role === 'admin' && (
+            {session?.user?.role === 'admin' && (
               <Link 
                 href="/admin" 
-                className="text-sm font-medium px-3 py-2 rounded-md transition-all duration-300 text-white hover:text-white hover:bg-white/20"
+                className="text-sm font-medium px-4 py-2 rounded-md transition-all duration-300 bg-gray-700 hover:bg-gray-600 text-white hover:text-white mr-3"
               >
                 Admin
               </Link>
@@ -131,7 +154,7 @@ const Navbar = () => {
             {session?.user && (
               <button 
                 onClick={() => signOut()} 
-                className="text-sm font-medium px-3 py-2 rounded-md transition-all duration-300 text-white hover:text-white hover:bg-white/20"
+                className="text-sm font-medium px-4 py-2 mr-5 rounded-md transition-all duration-300 border border-gray-500 hover:border-gray-400 text-white hover:text-white hover:bg-gray-700"
               >
                 Sign Out
               </button>
@@ -139,30 +162,38 @@ const Navbar = () => {
           </div>
           
           {/* Mobile menu button */}
-          <div className="md:hidden px-4">
+          <div className="md:hidden px-6">
             <button 
               type="button"
               aria-label="Toggle menu"
-              className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400 transition-all duration-300 ease-in-out transform hover:rotate-180"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+              <div className="relative w-6 h-6">
+                <div className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}>
+                  <FaTimes size={24} />
+                </div>
+                <div className={`absolute inset-0 transition-opacity duration-300 ease-in-out ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}>
+                  <FaBars size={24} />
+                </div>
+              </div>
             </button>
           </div>
         </div>
       </div>
       
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden mt-1 mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="bg-blue-600 dark:bg-blue-700 rounded-lg border border-blue-500 dark:border-blue-600 shadow-lg overflow-hidden">
+      {/* Mobile menu - Animated dropdown */}
+      <div className={`md:hidden fixed left-0 right-0 ${isMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'} transition-all duration-300 ease-in-out`}>
+        <div className="mt-1 mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="bg-gray-800 dark:bg-gray-900 rounded-lg border border-gray-700 dark:border-gray-800 shadow-xl overflow-hidden">
             <div className="space-y-1 px-4 py-3">
-              {navItems.map((item) => (
+              {navItems.map((item, index) => (
                 <Link 
                   key={item.name} 
                   href={item.href}
                   onClick={(e) => item.targetId ? handleNavLinkClick(e, item.targetId, item.isExternal, item.href) : undefined}
-                  className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700/50 dark:hover:bg-blue-800/50"
+                  className="block rounded-md px-4 py-2.5 text-base font-medium text-white hover:bg-gray-700/70 dark:hover:bg-gray-800/70 hover:translate-x-1 transform transition-all duration-300 ease-out"
+                  style={{animation: isMenuOpen ? 'fadeIn 0.5s ease-out forwards' : 'none', animationDelay: `${index * 75}ms`}}
                 >
                   {item.name}
                 </Link>
@@ -170,15 +201,15 @@ const Navbar = () => {
               
               <a 
                 href="mailto:caitlinobltc@gmail.com"
-                className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700/50 dark:hover:bg-blue-800/50"
+                className="block rounded-md px-4 py-2.5 text-base font-medium text-white bg-gradient-to-r from-blue-500/80 to-purple-500/80 hover:from-blue-500 hover:to-purple-500 transition-all duration-300 my-2"
               >
                 Get in Touch
               </a>
               
-              {session?.user.role === 'admin' && (
+              {session?.user?.role === 'admin' && (
                 <Link 
                   href="/admin"
-                  className="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700/50 dark:hover:bg-blue-800/50"
+                  className="block rounded-md px-4 py-2.5 text-base font-medium text-white hover:bg-gray-700/70 dark:hover:bg-gray-800/70 hover:translate-x-1 transform transition-all duration-300"
                 >
                   Admin
                 </Link>
@@ -187,7 +218,7 @@ const Navbar = () => {
               {session?.user && (
                 <button 
                   onClick={() => signOut()} 
-                  className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-700/50 dark:hover:bg-blue-800/50"
+                  className="block w-full text-left rounded-md px-4 py-2.5 text-base font-medium text-white hover:bg-gray-700/70 dark:hover:bg-gray-800/70 hover:translate-x-1 transform transition-all duration-300"
                 >
                   Sign Out
                 </button>
@@ -195,7 +226,7 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   );
 };
