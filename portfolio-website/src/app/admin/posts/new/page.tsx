@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
@@ -25,6 +25,14 @@ export default function NewPost() {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Authentication and routing effect
+  useEffect(() => {
+    if (status === 'unauthenticated' || (session && session.user.role !== 'admin')) {
+      router.push('/admin/login');
+    }
+  }, [status, session, router]);
+
+  // Render loading state
   if (status === 'loading') {
     return (
       <div className="flex justify-center items-center min-h-screen bg-indigo-900">
@@ -36,11 +44,7 @@ export default function NewPost() {
     );
   }
 
-  if (status === 'unauthenticated' || session?.user.role !== 'admin') {
-    router.push('/admin/login');
-    return null;
-  }
-
+  // Image change handler
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -54,7 +58,8 @@ export default function NewPost() {
     reader.readAsDataURL(file);
   };
 
-  const uploadImage = async () => {
+  // Image upload handler
+  const uploadImage = async (): Promise<string | null> => {
     if (!imageFile) return null;
     
     setImageUploading(true);
@@ -87,6 +92,7 @@ export default function NewPost() {
     }
   };
 
+  // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -146,8 +152,50 @@ export default function NewPost() {
           
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl overflow-hidden">
             <div className="p-6 space-y-6">
-              {/* Title, Excerpt, Content fields */}
+              {/* Title Input */}
+              <div>
+                <label htmlFor="title" className="block text-sm font-medium text-gray-900 mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter article title"
+                  required
+                />
+              </div>
 
+              {/* Excerpt Input */}
+              <div>
+                <label htmlFor="excerpt" className="block text-sm font-medium text-gray-900 mb-1">
+                  Excerpt (Optional)
+                </label>
+                <textarea
+                  id="excerpt"
+                  value={excerpt}
+                  onChange={(e) => setExcerpt(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Short description of the article"
+                  rows={3}
+                />
+              </div>
+
+              {/* Content Input */}
+              <div>
+                <label htmlFor="content" className="block text-sm font-medium text-gray-900 mb-1">
+                  Content
+                </label>
+                <SimpleEditor
+                  value={content}
+                  onChange={setContent}
+                  placeholder="Write your article content"
+                />
+              </div>
+
+              {/* Featured Image Upload */}
               <div>
                 <label htmlFor="featured-image" className="block text-sm font-medium text-gray-900 mb-1">
                   Featured Image
@@ -184,7 +232,46 @@ export default function NewPost() {
                   </div>
                 )}
               </div>
-              {/* Tags, Publish checkbox, Submit buttons */}
+
+              {/* Tags Input */}
+              <div>
+                <label htmlFor="tags" className="block text-sm font-medium text-gray-900 mb-1">
+                  Tags (Comma-separated)
+                </label>
+                <input
+                  type="text"
+                  id="tags"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter tags separated by commas"
+                />
+              </div>
+
+              {/* Publish Checkbox */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="is-published"
+                  checked={isPublished}
+                  onChange={(e) => setIsPublished(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="is-published" className="ml-2 block text-sm text-gray-900">
+                  Publish immediately
+                </label>
+              </div>
+
+              {/* Submit Button */}
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading || imageUploading}
+                  className="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  {loading ? 'Creating...' : 'Create Article'}
+                </button>
+              </div>
             </div>
           </form>
         </div>
