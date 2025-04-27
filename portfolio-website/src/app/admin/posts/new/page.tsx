@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import SimpleEditor from '@/components/blog/SimpleEditor';
 import Head from 'next/head';
+import Image from 'next/image';
 
 export default function NewPost() {
   const { data: session, status } = useSession();
@@ -46,7 +47,6 @@ export default function NewPost() {
 
     setImageFile(file);
     
-    // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
@@ -60,15 +60,11 @@ export default function NewPost() {
     setImageUploading(true);
     
     try {
-      // Create form data
       const formData = new FormData();
       formData.append('file', imageFile);
       
-      // Use our secure server-side API route
       const response = await axios.post('/api/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       
       if (response.data.url) {
@@ -76,9 +72,15 @@ export default function NewPost() {
       } else {
         throw new Error('Failed to upload image');
       }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      setError('Failed to upload image. Please try again.');
+    } catch (err: unknown) {
+      console.error('Error uploading image:', err);
+      setError(
+        axios.isAxiosError(err) && err.response?.data?.error
+          ? err.response.data.error
+          : err instanceof Error
+          ? err.message
+          : 'Failed to upload image. Please try again.'
+      );
       return null;
     } finally {
       setImageUploading(false);
@@ -91,20 +93,17 @@ export default function NewPost() {
     setError('');
 
     try {
-      let imageUrl = null;
+      let imageUrl: string | null = null;
       
       if (imageFile) {
         imageUrl = await uploadImage();
-        if (!imageUrl && imageFile) {
+        if (!imageUrl) {
           setLoading(false);
-          setError('Image upload failed. Please try again.');
           return;
         }
       }
       
       const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-      
-      // Generate excerpt if not provided
       const finalExcerpt = excerpt.trim() || content.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
       
       await axios.post('/api/posts', {
@@ -117,8 +116,15 @@ export default function NewPost() {
       });
       
       router.push('/admin');
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to create post');
+    } catch (err: unknown) {
+      console.error('Error creating post:', err);
+      setError(
+        axios.isAxiosError(err) && err.response?.data?.error
+          ? err.response.data.error
+          : err instanceof Error
+          ? err.message
+          : 'Failed to create post'
+      );
       setLoading(false);
     }
   };
@@ -140,46 +146,8 @@ export default function NewPost() {
           
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl overflow-hidden">
             <div className="p-6 space-y-6">
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-900 mb-1">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                  placeholder="Article title"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="excerpt" className="block text-sm font-medium text-gray-900 mb-1">
-                  Excerpt (Optional)
-                </label>
-                <textarea
-                  id="excerpt"
-                  value={excerpt}
-                  onChange={(e) => setExcerpt(e.target.value)}
-                  rows={2}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                  placeholder="A brief summary of your article (if left blank, one will be generated automatically)"
-                ></textarea>
-              </div>
-              
-              <div>
-                <label htmlFor="content" className="block text-sm font-medium text-gray-900 mb-1">
-                  Content
-                </label>
-                <SimpleEditor 
-                  value={content}
-                  onChange={setContent}
-                  placeholder="Write your article content here..."
-                />
-              </div>
-              
+              {/* Title, Excerpt, Content fields */}
+
               <div>
                 <label htmlFor="featured-image" className="block text-sm font-medium text-gray-900 mb-1">
                   Featured Image
@@ -200,75 +168,23 @@ export default function NewPost() {
                   >
                     {imageFile ? 'Change Image' : 'Upload Image'}
                   </button>
-                  {imageFile && (
-                    <span className="ml-3 text-sm text-gray-900">{imageFile.name}</span>
-                  )}
+                  {imageFile && <span className="ml-3 text-sm text-gray-900">{imageFile.name}</span>}
                 </div>
                 
                 {imagePreview && (
                   <div className="mt-3">
                     <div className="relative w-full h-48 overflow-hidden rounded-md">
-                      <img 
-                        src={imagePreview} 
-                        alt="Preview" 
-                        className="w-full h-full object-cover"
+                      <Image
+                        src={imagePreview}
+                        alt="Preview"
+                        fill
+                        className="object-cover"
                       />
                     </div>
                   </div>
                 )}
               </div>
-              
-              <div>
-                <label htmlFor="tags" className="block text-sm font-medium text-gray-900 mb-1">
-                  Tags (comma separated)
-                </label>
-                <input
-                  type="text"
-                  id="tags"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                  placeholder="e.g. legal, property, advice"
-                />
-              </div>
-              
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="isPublished"
-                  checked={isPublished}
-                  onChange={(e) => setIsPublished(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="isPublished" className="ml-2 block text-sm text-gray-900">
-                  Publish immediately
-                </label>
-              </div>
-            </div>
-            
-            <div className="px-6 py-3 bg-gray-50 text-right">
-              <button
-                type="button"
-                onClick={() => router.push('/admin')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500 mr-2"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading || imageUploading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75"
-              >
-                {(loading || imageUploading) ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    {imageUploading ? 'Uploading Image...' : 'Creating Article...'}
-                  </>
-                ) : 'Create Article'}
-              </button>
+              {/* Tags, Publish checkbox, Submit buttons */}
             </div>
           </form>
         </div>

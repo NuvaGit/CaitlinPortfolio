@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { formatDistance } from 'date-fns';
 
 const LatestBlog = () => {
   interface Post {
@@ -17,8 +16,8 @@ const LatestBlog = () => {
   
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [backgroundElements, setBackgroundElements] = useState<React.ReactElement[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   // Format date for display
   const formatDate = (dateString: string | undefined): string => {

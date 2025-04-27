@@ -2,6 +2,7 @@
 
 import { formatDistance } from 'date-fns';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Post } from '@/types/index';
 
 interface BlogCardProps {
@@ -13,7 +14,7 @@ const BlogCard = ({ post }: BlogCardProps) => {
   const formatDate = (dateString: string) => {
     try {
       return formatDistance(new Date(dateString), new Date(), { addSuffix: true });
-    } catch (error) {
+    } catch (_error) {
       return 'recently';
     }
   };
@@ -29,12 +30,17 @@ const BlogCard = ({ post }: BlogCardProps) => {
     <article className="bg-white rounded-xl shadow-md overflow-hidden mb-8 transition-all duration-300 hover:shadow-lg border border-gray-100">
       <div className="flex flex-col md:flex-row">
         {post.featuredImage && (
-          <div className="md:w-1/3 h-56 md:h-auto">
-            <Link href={`/blog/${post.slug}`}>
-              <img 
-                src={post.featuredImage} 
-                alt={post.title} 
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+          <div className="md:w-1/3 h-56 md:h-auto relative">
+            <Link
+              href={`/blog/${post.slug}`}
+              className="block w-full h-full"
+            >
+              <Image 
+                src={post.featuredImage}
+                alt={post.title}
+                fill
+                className="object-cover transition-transform duration-500 hover:scale-105"
+                sizes="(min-width: 768px) 33vw, 100vw"
               />
             </Link>
           </div>
@@ -42,11 +48,11 @@ const BlogCard = ({ post }: BlogCardProps) => {
         
         <div className={`p-6 ${post.featuredImage ? 'md:w-2/3' : 'w-full'}`}>
           <div className="mb-2">
-            {post.tags && post.tags.length > 0 && (
+            {(post.tags?.length ?? 0) > 0 && (
               <div className="flex flex-wrap gap-2 mb-3">
-                {Array.isArray(post.tags) && post.tags.map((tag, index) => (
+                {post.tags!.map((tag, i) => (
                   <Link 
-                    key={index}
+                    key={i}
                     href={`/blog?tag=${tag}`} 
                     className="inline-block bg-blue-50 text-blue-800 text-xs px-2 py-1 rounded-full hover:bg-blue-100 transition-colors"
                   >

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
+import type { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
 
 // No need for manual worker import in modern versions
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -41,8 +42,10 @@ export async function POST(request: NextRequest) {
       const page = await pdfDocument.getPage(i);
       const textContent = await page.getTextContent();
       
+      // Filter items to only TextItem, then extract the str property
       const pageText = textContent.items
-        .map((item: any) => item.str)
+        .filter((item): item is TextItem => 'str' in item)
+        .map(item => item.str)
         .join(' ');
       
       fullText += pageText + '\n\n';
@@ -54,7 +57,7 @@ export async function POST(request: NextRequest) {
       .trim();
     
     return NextResponse.json({ text: formattedText });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error extracting PDF text:', error);
     return NextResponse.json({ 
       error: 'Failed to extract text from PDF',

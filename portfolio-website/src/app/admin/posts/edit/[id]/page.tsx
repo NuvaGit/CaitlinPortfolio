@@ -7,6 +7,7 @@ import axios from 'axios';
 import { Post } from '@/types/index';
 import SimpleEditor from '@/components/blog/SimpleEditor';
 import Head from 'next/head';
+import Image from 'next/image';
 
 export default function EditPost({ params }: { params: { id: string } }) {
   const { data: session, status } = useSession();
@@ -62,8 +63,8 @@ export default function EditPost({ params }: { params: { id: string } }) {
         }
         
         setFetchingPost(false);
-      } catch (error) {
-        console.error('Error fetching post:', error);
+      } catch (err) {
+        console.error('Error fetching post:', err);
         setError('Failed to load post data. Please try again.');
         setFetchingPost(false);
       }
@@ -102,16 +103,14 @@ export default function EditPost({ params }: { params: { id: string } }) {
   };
 
   const uploadImage = async () => {
-    if (!imageFile) return currentImageUrl; // If no new image, return existing URL
+    if (!imageFile) return currentImageUrl;
     
     setImageUploading(true);
     
     try {
-      // Create form data
       const formData = new FormData();
       formData.append('file', imageFile);
       
-      // Use our secure server-side API route
       const response = await axios.post('/api/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -123,10 +122,10 @@ export default function EditPost({ params }: { params: { id: string } }) {
       } else {
         throw new Error('Failed to upload image');
       }
-    } catch (error) {
-      console.error('Error uploading image:', error);
+    } catch (err) {
+      console.error('Error uploading image:', err);
       setError('Failed to upload image. Please try again.');
-      return currentImageUrl; // Return current URL if upload fails
+      return currentImageUrl;
     } finally {
       setImageUploading(false);
     }
@@ -151,7 +150,6 @@ export default function EditPost({ params }: { params: { id: string } }) {
       
       const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
       
-      // Generate excerpt if not provided
       const finalExcerpt = excerpt.trim() || content.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
       
       await axios.put(`/api/posts/${postId}`, {
@@ -164,8 +162,14 @@ export default function EditPost({ params }: { params: { id: string } }) {
       });
       
       router.push('/admin');
-    } catch (error: any) {
-      setError(error.response?.data?.error || 'Failed to update post');
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to update post');
+      }
       setLoading(false);
     }
   };
@@ -257,10 +261,11 @@ export default function EditPost({ params }: { params: { id: string } }) {
                 {imagePreview && (
                   <div className="mt-3">
                     <div className="relative w-full h-48 overflow-hidden rounded-md">
-                      <img 
-                        src={imagePreview} 
-                        alt="Preview" 
-                        className="w-full h-full object-cover"
+                      <Image
+                        src={imagePreview}
+                        alt="Preview"
+                        fill
+                        className="object-cover"
                       />
                     </div>
                   </div>
@@ -287,9 +292,9 @@ export default function EditPost({ params }: { params: { id: string } }) {
                   id="isPublished"
                   checked={isPublished}
                   onChange={(e) => setIsPublished(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-৪ w-৪ text-blue-৬ focus:ring-blue-৫ border-gray-300 rounded"
                 />
-                <label htmlFor="isPublished" className="ml-2 block text-sm text-gray-900">
+                <label htmlFor="isPublished" className="ml-২ block text-sm text-gray-900">
                   Published
                 </label>
               </div>
@@ -299,20 +304,20 @@ export default function EditPost({ params }: { params: { id: string } }) {
               <button
                 type="button"
                 onClick={() => router.push('/admin')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500 mr-2"
+                className="px-৪ py-২ text-sm font-medium text-gray-৭ hover:text-gray-৫ mr-২"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading || imageUploading}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75"
+                className="inline-flex justify-center py-২ px-৪ border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-৬ hover:bg-blue-৭ focus:outline-none focus:ring-২ focus:ring-offset-২ focus:ring-blue-৫ disabled:opacity-৭৫"
               >
                 {(loading || imageUploading) ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg className="animate-spin -ml-১ mr-২ h-৪ w-৪ text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 ২৪ ২৪">
+                      <circle className="opacity-২৫" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-৭৫" fill="currentColor" d="M৪ 12a8 8 0 018-8V০C5.373 0 0 5.373 0 12h৪zm২ 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     {imageUploading ? 'Uploading Image...' : 'Updating Article...'}
                   </>

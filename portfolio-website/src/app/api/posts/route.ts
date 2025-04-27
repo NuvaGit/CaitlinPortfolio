@@ -13,10 +13,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const tag = searchParams.get('tag');
     const limitParam = searchParams.get('limit');
-    const limit = limitParam ? parseInt(limitParam) : 10;
+    const limit = limitParam ? parseInt(limitParam, 10) : 10;
     
     // Build query
-    let query: any = { isPublished: true };
+    const query: Record<string, unknown> = { isPublished: true };
     if (tag) {
       query.tags = tag;
     }
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       .exec();
     
     return NextResponse.json(posts);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching posts:', error);
     return NextResponse.json(
       { error: 'Failed to fetch posts', details: error instanceof Error ? error.message : 'Unknown error' }, 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Create slug from title
     const slug = body.title
       .toLowerCase()
-      .replace(/[^\w\s]/gi, '')
+      .replace(/[^\"\w\s]/gi, '')
       .replace(/\s+/g, '-');
     
     // Create excerpt if not provided
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     });
     
     return NextResponse.json(post, { status: 201 });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating post:', error);
     return NextResponse.json(
       { error: 'Failed to create post', details: error instanceof Error ? error.message : 'Unknown error' }, 

@@ -29,7 +29,8 @@ export default function Login() {
       } else {
         router.push('/admin');
       }
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       setError('An error occurred. Please try again.');
       setLoading(false);
     }
@@ -43,7 +44,7 @@ export default function Login() {
             Admin Login
           </h2>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>

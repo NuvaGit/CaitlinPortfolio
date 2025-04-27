@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Post } from '@/types/index';
 import { formatDistance } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
@@ -28,20 +29,15 @@ export default function Blog() {
       try {
         setError(null);
         setLoading(true);
-        
-        console.log('Fetching posts...');
+
         const response = await axios.get<Post[]>('/api/posts');
-        console.log('Posts fetched:', response.data);
-        
-        // Make sure we only show published posts to regular visitors
-        const publishedPosts = response.data.filter(post => post.isPublished === true);
+        const publishedPosts = response.data.filter(post => post.isPublished);
         setPosts(publishedPosts);
-        
-        // Extract all unique tags
-        const allTags = publishedPosts.flatMap((post: Post) => 
+
+        const allTags = publishedPosts.flatMap(post =>
           Array.isArray(post.tags) ? post.tags : []
         );
-        setTags([...new Set(allTags)]);
+        setTags(Array.from(new Set(allTags)));
       } catch (err) {
         console.error('Error fetching posts:', err);
         setError('Failed to load articles. Please try again later.');
@@ -57,13 +53,13 @@ export default function Blog() {
   const formatDate = (dateString: string) => {
     try {
       return formatDistance(new Date(dateString), new Date(), { addSuffix: true });
-    } catch (error) {
+    } catch {
       return 'recently';
     }
   };
 
   // Filter posts by tag if a tag is selected
-  const filteredPosts = activeTag 
+  const filteredPosts = activeTag
     ? posts.filter(post => Array.isArray(post.tags) && post.tags.includes(activeTag))
     : posts;
 
@@ -76,7 +72,7 @@ export default function Blog() {
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Research and insights on law, property, and professional development.
             </p>
-            
+
             {/* Tags filter */}
             {tags.length > 0 && (
               <div className="mt-8">
@@ -84,21 +80,21 @@ export default function Blog() {
                   <button
                     onClick={() => setActiveTag(null)}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                      activeTag === null 
-                        ? 'bg-blue-600 text-white shadow-md' 
+                      activeTag === null
+                        ? 'bg-blue-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                     }`}
                   >
                     All Articles
                   </button>
-                  
-                  {tags.map((tag) => (
+
+                  {tags.map(tag => (
                     <button
                       key={tag}
                       onClick={() => setActiveTag(tag)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                        activeTag === tag 
-                          ? 'bg-blue-600 text-white shadow-md' 
+                        activeTag === tag
+                          ? 'bg-blue-600 text-white shadow-md'
                           : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                       }`}
                     >
@@ -109,25 +105,22 @@ export default function Blog() {
               </div>
             )}
           </div>
-          
+
           {loading ? (
             <div className="text-center py-12">
               <div className="w-16 h-16 mx-auto mb-4">
                 <svg className="animate-spin w-full h-full text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
               </div>
               <p className="text-lg text-gray-600">Loading articles...</p>
             </div>
           ) : error ? (
             <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-6 text-center my-8">
-              <svg className="h-12 w-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
               <p className="text-lg font-semibold mb-2">{error}</p>
-              <button 
-                onClick={() => window.location.reload()} 
+              <button
+                onClick={() => window.location.reload()}
                 className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,25 +138,26 @@ export default function Blog() {
                   </p>
                 </div>
               )}
-              
+
               <div className="space-y-6">
                 {filteredPosts.map(post => (
-                  <Link 
-                    key={post._id} 
+                  <Link
+                    key={post._id}
                     href={`/blog/${post.slug}`}
                     className="block bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-100 transform hover:-translate-y-1"
                   >
                     <div className="flex flex-col md:flex-row">
                       {post.featuredImage && (
-                        <div className="md:w-1/4 h-48 md:h-auto">
-                          <img 
-                            src={post.featuredImage} 
-                            alt={post.title} 
-                            className="w-full h-full object-cover"
+                        <div className="md:w-1/4 h-48 md:h-auto relative">
+                          <Image
+                            src={post.featuredImage}
+                            alt={post.title}
+                            fill
+                            className="object-cover"
                           />
                         </div>
                       )}
-                      
+
                       <div className={`p-6 ${post.featuredImage ? 'md:w-3/4' : 'w-full'}`}>
                         <div className="flex items-center text-sm text-gray-500 mb-2">
                           <span className="flex items-center">
@@ -172,24 +166,23 @@ export default function Blog() {
                             </svg>
                             {formatDate(post.createdAt)}
                           </span>
-                          
+
                           <span className="mx-2">•</span>
-                          
+
                           <span className="flex items-center">
                             <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
-                            {typeof post.author === 'string' ? post.author : 
-                             post.author?.name || 'Author'}
+                            {typeof post.author === 'string' ? post.author : post.author?.name || 'Author'}
                           </span>
                         </div>
-                        
+
                         <h3 className="text-xl font-bold mb-2 text-gray-800 group-hover:text-blue-600">{post.title}</h3>
-                        
+
                         {post.excerpt && (
                           <p className="text-gray-600 mb-4 line-clamp-2">{post.excerpt}</p>
                         )}
-                        
+
                         {post.tags && post.tags.length > 0 && (
                           <div className="flex flex-wrap gap-2">
                             {post.tags.map((tag, index) => (

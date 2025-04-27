@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 interface PDFTextExtractorProps {
   pdfUrl: string | null;
@@ -32,9 +32,17 @@ const PDFTextExtractor: React.FC<PDFTextExtractorProps> = ({ pdfUrl, onTextExtra
       } else {
         setError('Failed to extract text. The PDF might be empty or protected.');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error extracting text:', err);
-      setError(err.response?.data?.error || 'Failed to extract text from PDF');
+
+      if (axios.isAxiosError(err)) {
+        // AxiosError gives us response data and message
+        const axiosErr = err as AxiosError<{ error?: string }>;
+        setError(axiosErr.response?.data?.error ?? axiosErr.message);
+      } else {
+        // Fallback for non-Axios errors
+        setError('Failed to extract text from PDF');
+      }
     } finally {
       setIsExtracting(false);
     }
