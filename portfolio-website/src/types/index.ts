@@ -27,6 +27,9 @@ export interface Post {
   createdAt: string;
   updatedAt: string;
   isPublished: boolean;
+  
+  pdfText?: string;
+  pdfUrl?: string;
 }
 
 export interface Experience {

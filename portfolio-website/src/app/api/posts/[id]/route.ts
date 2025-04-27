@@ -10,8 +10,11 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Properly extract id using destructuring 
+    const { id } = params;
+    
     await connectToDatabase();
-    const post = await Post.findById(params.id).populate('author', 'name').exec();
+    const post = await Post.findById(id).populate('author', 'name').exec();
     
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
@@ -30,6 +33,9 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Properly extract id using destructuring
+    const { id } = params;
+    
     const session = await getServerSession(authOptions);
     
     if (!session || session.user.role !== 'admin') {
@@ -49,7 +55,7 @@ export async function PUT(
     }
     
     const updatedPost = await Post.findByIdAndUpdate(
-      params.id,
+      id,
       { ...body, updatedAt: Date.now() },
       { new: true }
     );
@@ -71,6 +77,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Properly extract id using destructuring
+    const { id } = params;
+    
     const session = await getServerSession(authOptions);
     
     if (!session || session.user.role !== 'admin') {
@@ -78,7 +87,12 @@ export async function DELETE(
     }
     
     await connectToDatabase();
-    await Post.findByIdAndDelete(params.id);
+    
+    const deletedPost = await Post.findByIdAndDelete(id);
+    
+    if (!deletedPost) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
     
     return NextResponse.json({ message: 'Post deleted successfully' });
   } catch (error) {

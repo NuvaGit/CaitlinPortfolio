@@ -122,7 +122,7 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
         )}
         <div
           ref={editorRef}
-          className="min-h-[300px] p-3 border border-gray-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="min-h-[300px] p-3 border border-gray-300 border-t-0 rounded-b-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
           contentEditable
           onInput={handleChange}
           onBlur={() => {
@@ -130,6 +130,7 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
             setIsFocused(false);
           }}
           onFocus={() => setIsFocused(true)}
+          style={{ color: '#111827' }} /* Explicit dark text color */
         />
       </div>
 
@@ -137,6 +138,7 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
         .simple-editor [contenteditable] {
           line-height: 1.5;
           font-family: inherit;
+          color: #111827; /* Equivalent to text-gray-900 */
         }
         
         .simple-editor [contenteditable] h1,
@@ -146,6 +148,7 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
           margin-top: 1rem;
           margin-bottom: 0.5rem;
           font-weight: 600;
+          color: #111827;
         }
         
         .simple-editor [contenteditable] h1 {
@@ -162,12 +165,14 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
         
         .simple-editor [contenteditable] p {
           margin-bottom: 0.5rem;
+          color: #111827;
         }
         
         .simple-editor [contenteditable] ul,
         .simple-editor [contenteditable] ol {
           margin-bottom: 0.5rem;
           padding-left: 1.5rem;
+          color: #111827;
         }
         
         .simple-editor [contenteditable] blockquote {
@@ -176,7 +181,7 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
           margin-left: 0;
           margin-right: 0;
           font-style: italic;
-          color: #6b7280;
+          color: #111827;
         }
         
         .simple-editor [contenteditable] pre {
@@ -185,6 +190,12 @@ const SimpleEditor: React.FC<SimpleEditorProps> = ({
           border-radius: 0.25rem;
           font-family: monospace;
           white-space: pre-wrap;
+          color: #111827;
+        }
+        
+        .simple-editor [contenteditable] a {
+          color: #3b82f6;
+          text-decoration: underline;
         }
       `}</style>
     </div>
@@ -218,7 +229,7 @@ const ToolbarSelect = ({
 }) => (
   <select
     title={title}
-    className="h-8 bg-white border border-gray-300 text-gray-700 text-sm rounded px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+    className="h-8 bg-white border border-gray-300 text-gray-900 text-sm rounded px-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
     onChange={onChange}
     defaultValue="p"
   >

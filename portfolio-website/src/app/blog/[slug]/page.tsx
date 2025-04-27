@@ -40,6 +40,7 @@ export default function BlogPost() {
           }
         } else {
           setError('Post not found');
+          console.log('Post not found with slug:', slug);
           setTimeout(() => {
             router.push('/blog');
           }, 3000);
@@ -52,7 +53,14 @@ export default function BlogPost() {
       }
     };
 
-    fetchPost();
+    if (slug) {
+      fetchPost();
+    } else {
+      setError('Invalid article URL');
+      setTimeout(() => {
+        router.push('/blog');
+      }, 3000);
+    }
   }, [slug, router]);
 
   // Format date
@@ -127,11 +135,6 @@ export default function BlogPost() {
       });
   };
 
-  // Function to toggle between main content and PDF extract
-  const togglePdfExtract = () => {
-    setShowPdfExtract(!showPdfExtract);
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -149,7 +152,7 @@ export default function BlogPost() {
     return (
       <div className="min-h-screen bg-gray-50 pt-24 pb-16">
         <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-6 text-center">
               <svg className="h-12 w-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -170,16 +173,36 @@ export default function BlogPost() {
   }
 
   if (!post) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg p-6 text-center">
+              <svg className="h-12 w-12 text-yellow-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-lg font-semibold mb-2">Article not found</p>
+              <p className="mb-4">The article you're looking for may have been removed or doesn't exist</p>
+              <Link 
+                href="/blog" 
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Browse All Articles
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Determine if we have both regular content and PDF content
   const hasBothContents = post.content && post.pdfText && post.content !== post.pdfText;
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-16">
-      <div className="container mx-auto px-4">
-        <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gray-50 pt-20 pb-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="max-w-7xl mx-auto">
           {/* Back button */}
           <Link
             href="/blog"
@@ -203,14 +226,14 @@ export default function BlogPost() {
               <img 
                 src={post.featuredImage} 
                 alt={post.title} 
-                className="w-full h-auto object-cover"
+                className="w-full h-auto object-cover max-h-[500px]"
               />
             </div>
           )}
           
           {/* Post Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-3">{post.title}</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{post.title}</h1>
             
             <div className="flex flex-wrap items-center text-sm text-gray-500 mb-4">
               <span className="flex items-center mr-4">
@@ -224,7 +247,7 @@ export default function BlogPost() {
                 <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                {typeof post.author === 'string' ? post.author : post.author.name}
+                {typeof post.author === 'string' ? post.author : post.author?.name || 'Author'}
               </span>
             </div>
             
@@ -275,21 +298,25 @@ export default function BlogPost() {
           </div>
           
           {/* Post Content */}
-          <div className="bg-white rounded-xl shadow-md p-8 mb-8">
-            <div className="prose prose-blue max-w-none">
+          <div className="bg-white rounded-xl shadow-md p-6 sm:p-8 lg:p-10 mb-8">
+            <div className="prose prose-lg md:prose-xl prose-blue max-w-none text-gray-900">
               {/* Show either the regular content or the PDF extract based on the toggle */}
-              {(!hasBothContents || !showPdfExtract) && 
-                post.content.split('\n').map((paragraph, index) => (
-                  paragraph ? <p key={index} className="mb-4">{paragraph}</p> : <br key={index} />
-                ))
-              }
+              {(!hasBothContents || !showPdfExtract) && (
+                <div 
+                  dangerouslySetInnerHTML={{ __html: post.content }} 
+                  className="text-gray-900 text-lg"
+                  style={{ fontSize: '1.125rem', lineHeight: '1.75' }}
+                />
+              )}
               
               {/* Show PDF extract if selected or if it's the only content */}
-              {(showPdfExtract || (!hasBothContents && post.pdfText)) && post.pdfText && 
-                post.pdfText.split('\n').map((paragraph, index) => (
-                  paragraph ? <p key={index} className="mb-4">{paragraph}</p> : <br key={index} />
-                ))
-              }
+              {(showPdfExtract || (!hasBothContents && post.pdfText)) && post.pdfText && (
+                <div className="text-gray-900">
+                  {post.pdfText.split('\n').map((paragraph: string, index: number) => (
+                    paragraph ? <p key={index} className="mb-4 text-gray-900 text-lg">{paragraph}</p> : <br key={index} />
+                  ))}
+                </div>
+              )}
             </div>
             
             {/* PDF Download Link (if PDF is available) */}
@@ -358,17 +385,17 @@ export default function BlogPost() {
           </div>
           
           {/* Comments Section */}
-          <div className="bg-white rounded-xl shadow-md p-6 mb-8">
+          <div className="bg-white rounded-xl shadow-md p-6 sm:p-8 lg:p-10 mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Comments ({post.comments.length})</h2>
             
-            {post.comments.length > 0 ? (
+            {post.comments && post.comments.length > 0 ? (
               <div className="space-y-6 mb-8">
                 {post.comments.map((comment, index) => (
                   <div key={index} className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-400">
-                    <p className="text-gray-700">{comment.content}</p>
+                    <p className="text-gray-900">{comment.content}</p>
                     <div className="mt-2 flex items-center text-sm text-gray-500">
                       <span className="font-medium text-gray-700">
-                        {typeof comment.author === 'string' ? comment.author : comment.author.name}
+                        {typeof comment.author === 'string' ? comment.author : comment.author?.name || 'Anonymous'}
                       </span>
                       <span className="mx-2">•</span>
                       <span>{formatDate(comment.createdAt)}</span>
@@ -395,7 +422,7 @@ export default function BlogPost() {
                   value={authorName}
                   onChange={(e) => setAuthorName(e.target.value)}
                   placeholder="Your name"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   required
                 />
               </div>
@@ -409,7 +436,7 @@ export default function BlogPost() {
                   onChange={(e) => setComment(e.target.value)}
                   placeholder="Write your comment here..."
                   rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   required
                 ></textarea>
               </div>

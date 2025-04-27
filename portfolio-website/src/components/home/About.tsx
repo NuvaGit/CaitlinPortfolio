@@ -1,4 +1,6 @@
 import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 
 const About = () => {
   return (
@@ -40,28 +42,16 @@ const About = () => {
           <div className="mb-16 overflow-hidden bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl transition-all duration-300 hover:shadow-blue-500/20">
             <div className="md:flex">
               <div className="md:flex-shrink-0 md:w-1/3 bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-8">
-                {/* Profile Image Container with Animation */}
-                <div className="relative w-full h-64 rounded-lg overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400/30 to-indigo-600/30 backdrop-blur-sm 
-                              group-hover:from-blue-400/40 group-hover:to-indigo-600/40 transition-all duration-500"></div>
-                  
-                  {/* Profile Image Placeholder with Pulsing Animation */}
-                  <div className="relative flex items-center justify-center w-full h-full">
-                    <div className="absolute w-32 h-32 bg-white rounded-full opacity-20 animate-pulse"></div>
-                    <p className="relative z-10 text-white font-medium">Profile Photo</p>
-                  </div>
-                  
-                  {/* Uncomment when image ready */}
-                  {/* 
+                {/* Profile Image Container without blur effects */}
+                <div className="relative w-full h-64 rounded-lg overflow-hidden">
                   <Image
-                    src="/profile-photo.jpg"
+                    src="/images/caitlin.jpeg"
                     alt="Caitlin O'Brien"
                     width={300}
                     height={300}
-                    className="rounded-lg shadow-lg"
+                    className="w-full h-full object-cover rounded-lg shadow-lg"
                     priority
                   />
-                  */}
                 </div>
               </div>
               
@@ -185,15 +175,23 @@ const About = () => {
             </div>
           </div>
 
-          {/* Optional: Contact CTA */}
+          {/* LinkedIn CTA */}
           <div className="p-8 mt-12 text-center bg-white/10 backdrop-blur-sm rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:bg-white/15">
             <h3 className="mb-4 text-2xl font-bold text-white">Let's Connect</h3>
             <p className="mb-6 text-blue-100">
               Interested in discussing legal opportunities or collaborations? Feel free to reach out.
             </p>
-            <button className="px-8 py-3 font-semibold text-white transition-all duration-300 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-1">
-              Contact Me
-            </button>
+            <a 
+              href="https://www.linkedin.com/in/caitlin-o-brien-a03818257/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-8 py-3 font-semibold text-white transition-all duration-300 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:shadow-lg hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-1"
+            >
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+              </svg>
+              Let's Connect
+            </a>
           </div>
         </div>
       </div>

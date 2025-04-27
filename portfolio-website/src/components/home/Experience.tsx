@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const Experience = () => {
   const experiences = [
@@ -62,9 +62,39 @@ const Experience = () => {
   const sectionRef = useRef(null);
   const timelineRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
   const educationRef = useRef(null);
+  const [backgroundElements, setBackgroundElements] = useState<React.ReactNode[]>([]);
 
   // Set up refs for experience items
   timelineRefs.current = experiences.map((_, i) => timelineRefs.current[i] || React.createRef());
+
+  // Generate background elements on the client-side only
+  useEffect(() => {
+    const elements = Array.from({ length: 15 }, (_, i) => {
+      const width = Math.random() * 400 + 100;
+      const height = Math.random() * 400 + 100;
+      const top = `${Math.random() * 100}%`;
+      const left = `${Math.random() * 100}%`;
+      const animationDelay = `${Math.random() * 5}s`;
+      const animationDuration = `${Math.random() * 10 + 15}s`;
+
+      return (
+        <div 
+          key={i}
+          className="absolute rounded-full bg-white/5 blur-xl"
+          style={{
+            width: `${width}px`,
+            height: `${height}px`,
+            top: top,
+            left: left,
+            animationDelay: animationDelay,
+            animationDuration: animationDuration,
+          }}
+        />
+      );
+    });
+    
+    setBackgroundElements(elements);
+  }, []);
 
   useEffect(() => {
     // Observer callback function
@@ -116,20 +146,7 @@ const Experience = () => {
     <section className="py-24 bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 relative overflow-hidden" ref={sectionRef}>
       {/* Abstract Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        {[...Array(15)].map((_, i) => (
-          <div 
-            key={i}
-            className="absolute rounded-full bg-white/5 blur-xl"
-            style={{
-              width: `${Math.random() * 400 + 100}px`,
-              height: `${Math.random() * 400 + 100}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${Math.random() * 10 + 15}s`,
-            }}
-          />
-        ))}
+        {backgroundElements}
       </div>
 
       <div className="container mx-auto px-4 relative z-10">

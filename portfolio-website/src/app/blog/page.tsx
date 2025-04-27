@@ -1,50 +1,59 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import axios from 'axios';
-import { formatDistance } from 'date-fns';
+import Link from 'next/link';
 import { Post } from '@/types/index';
+import { formatDistance } from 'date-fns';
+import { useSearchParams } from 'next/navigation';
 
-export default function BlogPost() {
-  const params = useParams();
-  const router = useRouter();
-  const slug = params.slug as string;
-  
-  const [post, setPost] = useState<Post | null>(null);
+export default function Blog() {
+  const searchParams = useSearchParams();
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
 
-  // Fetch post data
+  // Get the tag from URL if present
   useEffect(() => {
-    const fetchPost = async () => {
+    const tagParam = searchParams.get('tag');
+    if (tagParam) {
+      setActiveTag(tagParam);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
       try {
-        // Find the post by slug
-        const response = await axios.get(`/api/posts`);
-        const posts = response.data;
-        const foundPost = posts.find((p: Post) => p.slug === slug);
+        setError(null);
+        setLoading(true);
         
-        if (foundPost) {
-          setPost(foundPost);
-        } else {
-          setError('Article not found');
-          setTimeout(() => {
-            router.push('/blog');
-          }, 3000);
-        }
+        console.log('Fetching posts...');
+        const response = await axios.get<Post[]>('/api/posts');
+        console.log('Posts fetched:', response.data);
+        
+        // Make sure we only show published posts to regular visitors
+        const publishedPosts = response.data.filter(post => post.isPublished === true);
+        setPosts(publishedPosts);
+        
+        // Extract all unique tags
+        const allTags = publishedPosts.flatMap((post: Post) => 
+          Array.isArray(post.tags) ? post.tags : []
+        );
+        setTags([...new Set(allTags)]);
       } catch (err) {
-        console.error('Error fetching post:', err);
-        setError('Failed to load article. Please try again later.');
+        console.error('Error fetching posts:', err);
+        setError('Failed to load articles. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPost();
-  }, [slug, router]);
+    fetchPosts();
+  }, []);
 
-  // Format date
+  // Format date for blog posts
   const formatDate = (dateString: string) => {
     try {
       return formatDistance(new Date(dateString), new Date(), { addSuffix: true });
@@ -52,178 +61,167 @@ export default function BlogPost() {
       return 'recently';
     }
   };
-  
-  // Format publication date
-  const formatPublicationDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-    } catch (error) {
-      return 'Unknown date';
-    }
-  };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="w-16 h-16">
-          <svg className="animate-spin w-full h-full text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
-      </div>
-    );
-  }
+  // Filter posts by tag if a tag is selected
+  const filteredPosts = activeTag 
+    ? posts.filter(post => Array.isArray(post.tags) && post.tags.includes(activeTag))
+    : posts;
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 pt-24 pb-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-6 text-center">
+  return (
+    <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen pt-24 pb-16">
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Articles</h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Research and insights on law, property, and professional development.
+            </p>
+            
+            {/* Tags filter */}
+            {tags.length > 0 && (
+              <div className="mt-8">
+                <div className="flex flex-wrap justify-center gap-2">
+                  <button
+                    onClick={() => setActiveTag(null)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                      activeTag === null 
+                        ? 'bg-blue-600 text-white shadow-md' 
+                        : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                    }`}
+                  >
+                    All Articles
+                  </button>
+                  
+                  {tags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => setActiveTag(tag)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                        activeTag === tag 
+                          ? 'bg-blue-600 text-white shadow-md' 
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 mx-auto mb-4">
+                <svg className="animate-spin w-full h-full text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+              <p className="text-lg text-gray-600">Loading articles...</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-6 text-center my-8">
               <svg className="h-12 w-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <p className="text-lg font-semibold mb-2">{error}</p>
-              <p className="mb-4">Redirecting to blog page...</p>
-              <Link 
-                href="/blog" 
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              <button 
+                onClick={() => window.location.reload()} 
+                className="mt-4 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
-                Go to Blog
-              </Link>
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh page
+              </button>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!post) {
-    return null;
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50 pt-24 pb-16">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Back button */}
-          <Link
-            href="/blog"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-8 group"
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-5 w-5 mr-2 transform group-hover:-translate-x-1 transition-transform duration-200" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Articles
-          </Link>
-          
-          <article className="bg-white rounded-xl overflow-hidden shadow-lg mb-8">
-            {/* Featured Image */}
-            {post.featuredImage && (
-              <div className="w-full h-96 relative overflow-hidden">
-                <img 
-                  src={post.featuredImage} 
-                  alt={post.title} 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-            
-            {/* Article Header */}
-            <div className="px-8 pt-8 pb-4">
-              {/* Tags */}
-              {post.tags && post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {Array.isArray(post.tags) && post.tags.map((tag, index) => (
-                    <Link 
-                      key={index} 
-                      href={`/blog?tag=${tag}`}
-                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm hover:bg-blue-200 transition-colors duration-200"
-                    >
-                      {tag}
-                    </Link>
-                  ))}
+          ) : filteredPosts.length > 0 ? (
+            <>
+              {activeTag && (
+                <div className="mb-8 text-center">
+                  <p className="text-lg text-gray-600">
+                    Showing articles tagged with <span className="font-semibold text-blue-600">{activeTag}</span>
+                  </p>
                 </div>
               )}
               
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
-              
-              <div className="flex items-center text-gray-600 mb-6">
-                <div className="flex items-center">
-                  <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <span className="font-medium">
-                    {typeof post.author === 'string' ? post.author : post.author.name}
-                  </span>
-                </div>
-                <span className="mx-3">•</span>
-                <time className="text-gray-600" dateTime={post.createdAt}>
-                  {formatPublicationDate(post.createdAt)}
-                </time>
-              </div>
-            </div>
-            
-            {/* Article Content */}
-            <div className="px-8 py-6 prose prose-lg prose-blue max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: post.content }} />
-            </div>
-            
-            {/* Article Footer */}
-            <div className="px-8 py-6 bg-gray-50 border-t border-gray-100">
-              <div className="flex flex-wrap justify-between items-center">
-                <div className="text-sm text-gray-600">
-                  Last updated {formatDate(post.updatedAt || post.createdAt)}
-                </div>
-                
-                <div className="flex space-x-4">
-                  <button 
-                    onClick={() => {
-                      const url = `${window.location.origin}/blog/${post.slug}`;
-                      navigator.clipboard.writeText(url);
-                      alert('Article URL copied to clipboard!');
-                    }}
-                    className="inline-flex items-center text-gray-600 hover:text-blue-700"
+              <div className="space-y-6">
+                {filteredPosts.map(post => (
+                  <Link 
+                    key={post._id} 
+                    href={`/blog/${post.slug}`}
+                    className="block bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-100 transform hover:-translate-y-1"
                   >
-                    <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                    </svg>
-                    Share
+                    <div className="flex flex-col md:flex-row">
+                      {post.featuredImage && (
+                        <div className="md:w-1/4 h-48 md:h-auto">
+                          <img 
+                            src={post.featuredImage} 
+                            alt={post.title} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      
+                      <div className={`p-6 ${post.featuredImage ? 'md:w-3/4' : 'w-full'}`}>
+                        <div className="flex items-center text-sm text-gray-500 mb-2">
+                          <span className="flex items-center">
+                            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {formatDate(post.createdAt)}
+                          </span>
+                          
+                          <span className="mx-2">•</span>
+                          
+                          <span className="flex items-center">
+                            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            {typeof post.author === 'string' ? post.author : 
+                             post.author?.name || 'Author'}
+                          </span>
+                        </div>
+                        
+                        <h3 className="text-xl font-bold mb-2 text-gray-800 group-hover:text-blue-600">{post.title}</h3>
+                        
+                        {post.excerpt && (
+                          <p className="text-gray-600 mb-4 line-clamp-2">{post.excerpt}</p>
+                        )}
+                        
+                        {post.tags && post.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {post.tags.map((tag, index) => (
+                              <span key={index} className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="bg-white shadow-md rounded-lg p-12 text-center">
+              {activeTag ? (
+                <>
+                  <p className="text-xl text-gray-600 mb-4">No articles found with the tag <span className="font-semibold text-blue-600">{activeTag}</span>.</p>
+                  <button
+                    onClick={() => setActiveTag(null)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    View all articles
                   </button>
-                </div>
-              </div>
+                </>
+              ) : (
+                <p className="text-xl text-gray-600">No articles found. Create your first article in the admin dashboard.</p>
+              )}
             </div>
-          </article>
-          
-          {/* Related Articles Section (Placeholder - you can implement the actual logic) */}
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">More Articles</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Placeholder for related articles */}
-              <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300">
-                <Link href="/blog" className="block p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2 hover:text-blue-700 transition-colors">
-                    Browse all articles
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    Check out more research and insights on law, property, and professional development.
-                  </p>
-                </Link>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
