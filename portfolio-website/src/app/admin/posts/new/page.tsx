@@ -4,7 +4,8 @@ import { useState, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import PDFTextExtractor from '@/components/blog/PDFTextExtractor';
+import SimpleEditor from '@/components/blog/SimpleEditor';
+import Head from 'next/head';
 
 export default function NewPost() {
   const { data: session, status } = useSession();
@@ -12,21 +13,16 @@ export default function NewPost() {
   
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [excerpt, setExcerpt] = useState('');
   const [tags, setTags] = useState('');
   const [isPublished, setIsPublished] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
-  const [pdfUploading, setPdfUploading] = useState(false);
-  const [pdfFilename, setPdfFilename] = useState<string | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [pdfText, setPdfText] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   if (status === 'loading') {
     return (
@@ -56,16 +52,6 @@ export default function NewPost() {
       setImagePreview(reader.result as string);
     };
     reader.readAsDataURL(file);
-  };
-
-  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setPdfFile(file);
-    setPdfFilename(file.name);
-    setPdfUrl(null); // Reset PDF URL when a new file is selected
-    setPdfText(null); // Reset PDF text when a new file is selected
   };
 
   const uploadImage = async () => {
@@ -99,50 +85,6 @@ export default function NewPost() {
     }
   };
 
-  const uploadPdf = async () => {
-    if (!pdfFile) return null;
-    
-    setPdfUploading(true);
-    
-    try {
-      // Create form data
-      const formData = new FormData();
-      formData.append('file', pdfFile);
-      
-      // Use our secure server-side API route for PDFs
-      const response = await axios.post('/api/upload-pdf', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      if (response.data.url) {
-        // Store the PDF URL for extraction later
-        setPdfUrl(response.data.url);
-        return response.data.url;
-      } else {
-        throw new Error('Failed to upload PDF');
-      }
-    } catch (error) {
-      console.error('Error uploading PDF:', error);
-      setError('Failed to upload PDF. Please try again.');
-      return null;
-    } finally {
-      setPdfUploading(false);
-    }
-  };
-
-  const handlePdfTextExtracted = (text: string) => {
-    setPdfText(text);
-    
-    // Append PDF text to the content or set it as the content
-    if (content.trim()) {
-      setContent(content + '\n\n' + text);
-    } else {
-      setContent(text);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -150,7 +92,6 @@ export default function NewPost() {
 
     try {
       let imageUrl = null;
-      let pdfUrl = null;
       
       if (imageFile) {
         imageUrl = await uploadImage();
@@ -161,25 +102,18 @@ export default function NewPost() {
         }
       }
       
-      if (pdfFile) {
-        pdfUrl = await uploadPdf();
-        if (!pdfUrl && pdfFile) {
-          setLoading(false);
-          setError('PDF upload failed. Please try again.');
-          return;
-        }
-      }
-      
       const tagsArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      
+      // Generate excerpt if not provided
+      const finalExcerpt = excerpt.trim() || content.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
       
       await axios.post('/api/posts', {
         title,
         content,
+        excerpt: finalExcerpt,
         tags: tagsArray,
         isPublished,
         featuredImage: imageUrl,
-        pdfUrl: pdfUrl,
-        pdfText: pdfText,
       });
       
       router.push('/admin');
@@ -190,174 +124,155 @@ export default function NewPost() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 pt-24 pb-16 px-4">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6 text-white">Create New Post</h1>
-        
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-900 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl overflow-hidden">
-          <div className="p-6 space-y-6">
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-900 mb-1">
-                Title
-              </label>
-              <input
-                type="text"
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="content" className="block text-sm font-medium text-gray-900 mb-1">
-                Content
-              </label>
-              <textarea
-                id="content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                required
-                rows={12}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                placeholder="Write your post content here..."
-              ></textarea>
-            </div>
-            
-            <div>
-              <label htmlFor="featured-image" className="block text-sm font-medium text-gray-900 mb-1">
-                Featured Image
-              </label>
-              <div className="mt-1 flex items-center">
-                <input
-                  type="file"
-                  id="featured-image"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  {imageFile ? 'Change Image' : 'Upload Image'}
-                </button>
-                {imageFile && (
-                  <span className="ml-3 text-sm text-gray-900">{imageFile.name}</span>
-                )}
-              </div>
-              
-              {imagePreview && (
-                <div className="mt-3">
-                  <div className="relative w-full h-48 overflow-hidden rounded-md">
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* PDF upload section */}
-            <div>
-              <label htmlFor="pdf-document" className="block text-sm font-medium text-gray-900 mb-1">
-                PDF Document (Optional)
-              </label>
-              <div className="mt-1 flex items-center">
-                <input
-                  type="file"
-                  id="pdf-document"
-                  ref={pdfInputRef}
-                  accept=".pdf"
-                  onChange={handlePdfChange}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => pdfInputRef.current?.click()}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  {pdfFile ? 'Change PDF' : 'Upload PDF'}
-                </button>
-                {pdfFilename && (
-                  <span className="ml-3 text-sm text-gray-900">{pdfFilename}</span>
-                )}
-              </div>
-              
-              {/* PDF Text Extractor component */}
-              {pdfUrl && (
-                <PDFTextExtractor 
-                  pdfUrl={pdfUrl}
-                  onTextExtracted={handlePdfTextExtracted}
-                />
-              )}
-            </div>
-            
-            <div>
-              <label htmlFor="tags" className="block text-sm font-medium text-gray-900 mb-1">
-                Tags (comma separated)
-              </label>
-              <input
-                type="text"
-                id="tags"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                placeholder="e.g. legal, property, advice"
-              />
-            </div>
-            
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="isPublished"
-                checked={isPublished}
-                onChange={(e) => setIsPublished(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="isPublished" className="ml-2 block text-sm text-gray-900">
-                Publish immediately
-              </label>
-            </div>
-          </div>
+    <>
+      <Head>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+      </Head>
+      <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 pt-24 pb-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl font-bold mb-6 text-white">Create New Article</h1>
           
-          <div className="px-6 py-3 bg-gray-50 text-right">
-            <button
-              type="button"
-              onClick={() => router.push('/admin')}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500 mr-2"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || imageUploading || pdfUploading}
-              className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75"
-            >
-              {(loading || imageUploading || pdfUploading) ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  {imageUploading ? 'Uploading Image...' : pdfUploading ? 'Uploading PDF...' : 'Creating Post...'}
-                </>
-              ) : 'Create Post'}
-            </button>
-          </div>
-        </form>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-900 px-4 py-3 rounded mb-4">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-xl overflow-hidden">
+            <div className="p-6 space-y-6">
+              <div>
+                <label htmlFor="title" className="block text-sm font-medium text-gray-900 mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="Article title"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="excerpt" className="block text-sm font-medium text-gray-900 mb-1">
+                  Excerpt (Optional)
+                </label>
+                <textarea
+                  id="excerpt"
+                  value={excerpt}
+                  onChange={(e) => setExcerpt(e.target.value)}
+                  rows={2}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="A brief summary of your article (if left blank, one will be generated automatically)"
+                ></textarea>
+              </div>
+              
+              <div>
+                <label htmlFor="content" className="block text-sm font-medium text-gray-900 mb-1">
+                  Content
+                </label>
+                <SimpleEditor 
+                  value={content}
+                  onChange={setContent}
+                  placeholder="Write your article content here..."
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="featured-image" className="block text-sm font-medium text-gray-900 mb-1">
+                  Featured Image
+                </label>
+                <div className="mt-1 flex items-center">
+                  <input
+                    type="file"
+                    id="featured-image"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    {imageFile ? 'Change Image' : 'Upload Image'}
+                  </button>
+                  {imageFile && (
+                    <span className="ml-3 text-sm text-gray-900">{imageFile.name}</span>
+                  )}
+                </div>
+                
+                {imagePreview && (
+                  <div className="mt-3">
+                    <div className="relative w-full h-48 overflow-hidden rounded-md">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <label htmlFor="tags" className="block text-sm font-medium text-gray-900 mb-1">
+                  Tags (comma separated)
+                </label>
+                <input
+                  type="text"
+                  id="tags"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  placeholder="e.g. legal, property, advice"
+                />
+              </div>
+              
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="isPublished"
+                  checked={isPublished}
+                  onChange={(e) => setIsPublished(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="isPublished" className="ml-2 block text-sm text-gray-900">
+                  Publish immediately
+                </label>
+              </div>
+            </div>
+            
+            <div className="px-6 py-3 bg-gray-50 text-right">
+              <button
+                type="button"
+                onClick={() => router.push('/admin')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500 mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading || imageUploading}
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-75"
+              >
+                {(loading || imageUploading) ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    {imageUploading ? 'Uploading Image...' : 'Creating Article...'}
+                  </>
+                ) : 'Create Article'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

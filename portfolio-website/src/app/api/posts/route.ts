@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       .replace(/\s+/g, '-');
     
     // Create excerpt if not provided
-    const excerpt = body.excerpt || body.content.substring(0, 150) + '...';
+    const excerpt = body.excerpt || body.content.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
     
     const post = await Post.create({
       title: body.title,
@@ -82,7 +82,6 @@ export async function POST(request: NextRequest) {
       tags: body.tags || [],
       isPublished: body.isPublished !== undefined ? body.isPublished : true,
       featuredImage: body.featuredImage || null,
-      pdfUrl: body.pdfUrl || null, // Add optional pdfUrl field
     });
     
     return NextResponse.json(post, { status: 201 });

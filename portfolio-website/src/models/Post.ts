@@ -31,14 +31,6 @@ const PostSchema = new Schema({
   },
   excerpt: String,
   featuredImage: String, // URL for featured image
-  pdfUrl: {
-    type: String,
-    required: false, // Optional PDF URL
-  },
-  pdfText: {
-    type: String,
-    required: false, // Extracted PDF text
-  },
   author: {
     type: Schema.Types.ObjectId,
     ref: 'User',

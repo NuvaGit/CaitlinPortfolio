@@ -20,8 +20,6 @@ export interface Post {
   content: string;
   excerpt?: string;
   featuredImage?: string;
-  pdfUrl?: string;
-  pdfText?: string; // Added field for extracted PDF text
   author: string | User;
   tags?: string[];
   likes: number;

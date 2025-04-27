@@ -29,18 +29,18 @@ export default function Admin() {
       setPosts(response.data);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error('Error fetching articles:', error);
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
+    if (window.confirm('Are you sure you want to delete this article?')) {
       try {
         await axios.delete(`/api/posts/${id}`);
         setPosts(posts.filter(post => post._id !== id));
       } catch (error) {
-        console.error('Error deleting post:', error);
+        console.error('Error deleting article:', error);
       }
     }
   };
@@ -62,13 +62,13 @@ export default function Admin() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
           <Link href="/admin/posts/new" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition">
-            New Post
+            New Article
           </Link>
         </div>
 
         <div className="bg-white rounded-lg shadow-xl overflow-hidden">
           <div className="p-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900">Blog Posts</h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Articles</h2>
             
             {posts.length > 0 ? (
               <div className="overflow-x-auto">
@@ -123,7 +123,7 @@ export default function Admin() {
               </div>
             ) : (
               <div className="text-center py-4">
-                <p className="text-gray-900">No posts found. Create your first post!</p>
+                <p className="text-gray-900">No articles found. Create your first article!</p>
               </div>
             )}
           </div>
