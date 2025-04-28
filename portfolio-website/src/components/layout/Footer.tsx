@@ -11,7 +11,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* About Section */}
           <div>
-            <h3 className="text-lg font-bold mb-4">Caitlin O&apos;Brien</h3>
+            <h3 className="text-lg font-bold mb-4">Caitlin O'Brien</h3>
             <p className="text-sm">Law with Politics graduate from University College Dublin with a passion for legal research and property investment.</p>
           </div>
           
@@ -93,7 +93,7 @@ const Footer = () => {
         </div>
         
         <div className="mt-8 pt-6 border-t border-gray-700 text-sm text-center">
-          <p>&copy; {currentYear} Caitlin O&apos;Brien. All rights reserved.</p>
+          <p>&copy; {currentYear} Caitlin O'Brien. All rights reserved.</p>
         </div>
       </div>
     </footer>

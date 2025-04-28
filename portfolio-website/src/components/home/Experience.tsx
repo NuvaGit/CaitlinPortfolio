@@ -102,7 +102,7 @@ const Experience = () => {
     const currentEducationRef = educationRef.current;
     
     // Observer callback function
-    const observerCallback = (entries: IntersectionObserverEntry[], observer: IntersectionObserver) => {
+    const observerCallback = (entries: IntersectionObserverEntry[], _observer: IntersectionObserver) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('animate-in');

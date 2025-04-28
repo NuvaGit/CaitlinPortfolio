@@ -1,8 +1,4 @@
 // File: src/types/next-auth.d.ts
-
-// We're removing the unused import
-// import NextAuth from "next-auth";
-
 declare module "next-auth" {
   /**
    * Extending the built-in session types
@@ -16,7 +12,7 @@ declare module "next-auth" {
       role?: 'admin' | 'user';
     }
   }
-
+  
   /**
    * Extending the built-in user types
    */

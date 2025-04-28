@@ -40,7 +40,7 @@ export default function Blog() {
   const formatDate = (dateString: string) => {
     try {
       return formatDistance(new Date(dateString), new Date(), { addSuffix: true });
-    } catch (error) {
+    } catch (_) {
       return 'recently';
     }
   };

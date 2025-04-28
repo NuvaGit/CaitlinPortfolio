@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
@@ -29,17 +28,15 @@ export default function Blog() {
       try {
         setError(null);
         setLoading(true);
-
         const response = await axios.get<Post[]>('/api/posts');
         const publishedPosts = response.data.filter(post => post.isPublished);
         setPosts(publishedPosts);
-
         const allTags = publishedPosts.flatMap(post =>
           Array.isArray(post.tags) ? post.tags : []
         );
         setTags(Array.from(new Set(allTags)));
-      } catch (err) {
-        console.error('Error fetching posts:', err);
+      } catch (_err) {
+        console.error('Error fetching posts:', _err);
         setError('Failed to load articles. Please try again later.');
       } finally {
         setLoading(false);
@@ -72,7 +69,6 @@ export default function Blog() {
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Research and insights on law, property, and professional development.
             </p>
-
             {/* Tags filter */}
             {tags.length > 0 && (
               <div className="mt-8">
@@ -87,7 +83,6 @@ export default function Blog() {
                   >
                     All Articles
                   </button>
-
                   {tags.map(tag => (
                     <button
                       key={tag}
@@ -105,7 +100,6 @@ export default function Blog() {
               </div>
             )}
           </div>
-
           {loading ? (
             <div className="text-center py-12">
               <div className="w-16 h-16 mx-auto mb-4">
@@ -138,7 +132,6 @@ export default function Blog() {
                   </p>
                 </div>
               )}
-
               <div className="space-y-6">
                 {filteredPosts.map(post => (
                   <Link
@@ -157,7 +150,6 @@ export default function Blog() {
                           />
                         </div>
                       )}
-
                       <div className={`p-6 ${post.featuredImage ? 'md:w-3/4' : 'w-full'}`}>
                         <div className="flex items-center text-sm text-gray-500 mb-2">
                           <span className="flex items-center">
@@ -166,9 +158,7 @@ export default function Blog() {
                             </svg>
                             {formatDate(post.createdAt)}
                           </span>
-
                           <span className="mx-2">•</span>
-
                           <span className="flex items-center">
                             <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -176,13 +166,10 @@ export default function Blog() {
                             {typeof post.author === 'string' ? post.author : post.author?.name || 'Author'}
                           </span>
                         </div>
-
                         <h3 className="text-xl font-bold mb-2 text-gray-800 group-hover:text-blue-600">{post.title}</h3>
-
                         {post.excerpt && (
                           <p className="text-gray-600 mb-4 line-clamp-2">{post.excerpt}</p>
                         )}
-
                         {post.tags && post.tags.length > 0 && (
                           <div className="flex flex-wrap gap-2">
                             {post.tags.map((tag, index) => (

@@ -78,7 +78,7 @@ const Hero = () => {
             <div className="bg-white/10 backdrop-blur-md p-2 rounded-xl shadow-xl transform transition-transform duration-500 md:rotate-3 hover:md:rotate-0">
               <Image
                 src="/images/caitlin.jpeg"
-                alt="Caitlin O'Brien"
+                alt="Caitlin O&apos;Brien"
                 width={500}
                 height={600}
                 className="w-full h-auto object-cover rounded-md"

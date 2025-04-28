@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState } from 'react';
 import axios, { AxiosError } from 'axios';
 
@@ -8,24 +7,27 @@ interface PDFTextExtractorProps {
   onTextExtracted: (text: string) => void;
 }
 
+interface ErrorResponse {
+  error?: string;
+}
+
 const PDFTextExtractor: React.FC<PDFTextExtractorProps> = ({ pdfUrl, onTextExtracted }) => {
   const [isExtracting, setIsExtracting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
-
+  
   const extractText = async () => {
     if (!pdfUrl) {
       setError('No PDF URL provided. Please upload a PDF first.');
       return;
     }
-
+    
     setIsExtracting(true);
     setError(null);
     setIsComplete(false);
-
+    
     try {
       const response = await axios.post('/api/extract-pdf', { pdfUrl });
-      
       if (response.data.text) {
         onTextExtracted(response.data.text);
         setIsComplete(true);
@@ -34,11 +36,11 @@ const PDFTextExtractor: React.FC<PDFTextExtractorProps> = ({ pdfUrl, onTextExtra
       }
     } catch (err: unknown) {
       console.error('Error extracting text:', err);
-
       if (axios.isAxiosError(err)) {
-        // AxiosError gives us response data and message
-        const axiosErr = err as AxiosError<{ error?: string }>;
+        const axiosErr = err as AxiosError<ErrorResponse>;
         setError(axiosErr.response?.data?.error ?? axiosErr.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
       } else {
         // Fallback for non-Axios errors
         setError('Failed to extract text from PDF');
@@ -47,11 +49,10 @@ const PDFTextExtractor: React.FC<PDFTextExtractorProps> = ({ pdfUrl, onTextExtra
       setIsExtracting(false);
     }
   };
-
+  
   return (
     <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
       <h3 className="text-lg font-medium text-gray-900 mb-2">PDF Text Extraction</h3>
-      
       {!pdfUrl ? (
         <div className="text-sm text-gray-500 mb-4">
           Upload a PDF first to extract its text
@@ -61,7 +62,6 @@ const PDFTextExtractor: React.FC<PDFTextExtractorProps> = ({ pdfUrl, onTextExtra
           <p className="text-sm text-gray-500 mb-4">
             Extract text from the uploaded PDF to create an article from it.
           </p>
-          
           <button
             type="button"
             onClick={extractText}
@@ -89,13 +89,11 @@ const PDFTextExtractor: React.FC<PDFTextExtractorProps> = ({ pdfUrl, onTextExtra
           </button>
         </>
       )}
-      
       {error && (
         <div className="mt-3 text-sm text-red-600">
           <p>{error}</p>
         </div>
       )}
-      
       {isComplete && (
         <div className="mt-3 text-sm text-green-600">
           <p>Text has been successfully extracted and added to the article content.</p>

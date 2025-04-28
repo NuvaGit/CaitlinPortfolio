@@ -1,5 +1,4 @@
 'use client';
-
 import Link from 'next/link';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -18,22 +17,22 @@ const LatestBlog = () => {
   const [loading, setLoading] = useState(true);
   const [backgroundElements, setBackgroundElements] = useState<React.ReactElement[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
+  
   // Format date for display
   const formatDate = (dateString: string | undefined): string => {
     if (!dateString) return 'Recently';
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
-    } catch (error) {
+    } catch (_) {
       return 'Recently';
     }
   };
-
+  
   // Generate background elements client-side to avoid hydration issues
   useEffect(() => {
     const elements = Array.from({ length: 10 }, (_, i) => (
@@ -52,7 +51,7 @@ const LatestBlog = () => {
     ));
     setBackgroundElements(elements);
   }, []);
-
+  
   // Fetch blog posts from API
   useEffect(() => {
     const fetchPosts = async () => {
@@ -68,10 +67,9 @@ const LatestBlog = () => {
         setLoading(false);
       }
     };
-
     fetchPosts();
   }, []);
-
+  
   // Extract excerpt from content if needed
   const getExcerpt = (post: Post): string => {
     if (post.excerpt) return post.excerpt;
@@ -81,14 +79,13 @@ const LatestBlog = () => {
       .substring(0, 120)
       .trim() + '...';
   };
-
+  
   return (
     <section className="py-16 bg-gradient-to-br from-indigo-900 via-purple-800 to-blue-900 relative overflow-hidden">
       {/* Abstract Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {backgroundElements}
       </div>
-
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-3 text-white">Latest Blog Posts</h2>
@@ -97,7 +94,6 @@ const LatestBlog = () => {
             Thoughts and insights on law, property, and professional development.
           </p>
         </div>
-
         {loading ? (
           <div className="flex justify-center items-center py-20">
             <div className="w-12 h-12">
@@ -141,7 +137,6 @@ const LatestBlog = () => {
             <p className="text-white">No blog posts found. Check back soon!</p>
           </div>
         )}
-
         <div className="text-center">
           <Link
             href="/blog"

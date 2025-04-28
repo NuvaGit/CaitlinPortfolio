@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     
     // For admin users, show all posts including unpublished ones
     const session = await getServerSession(authOptions);
-    if (session?.user.role === 'admin') {
+    if ((session as { user: { role: string } } | null)?.user.role === 'admin') {
       delete query.isPublished;
     }
     
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session as { user: { role: string } }).user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
@@ -73,12 +73,13 @@ export async function POST(request: NextRequest) {
     // Create excerpt if not provided
     const excerpt = body.excerpt || body.content.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
     
+    const adminSession = session as { user: { role: string, id: string } };
     const post = await Post.create({
       title: body.title,
       slug,
       content: body.content,
       excerpt,
-      author: session.user.id,
+      author: adminSession.user.id,
       tags: body.tags || [],
       isPublished: body.isPublished !== undefined ? body.isPublished : true,
       featuredImage: body.featuredImage || null,

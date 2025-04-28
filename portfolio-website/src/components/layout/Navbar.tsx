@@ -117,7 +117,7 @@ const Navbar = () => {
           <div className="flex items-center px-6">
             <Link href="/" className="flex items-center">
               <span className="font-bold transition-all duration-300 text-white text-xl tracking-wide relative overflow-hidden group">
-                <span className="bg-clip-text bg-gradient-to-r from-blue-300 to-purple-400 hover:from-blue-200 hover:to-purple-300 transition-all duration-500">Caitlin O&apos;Brien</span>
+                <span className="bg-clip-text bg-gradient-to-r from-blue-300 to-purple-400 hover:from-blue-200 hover:to-purple-300 transition-all duration-500">Caitlin OBrien</span>
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-500 group-hover:w-full transition-all duration-500 ease-in-out"></span>
               </span>
             </Link>

@@ -67,7 +67,7 @@ export default function BlogPost() {
   const formatDate = (dateString: string) => {
     try {
       return formatDistance(new Date(dateString), new Date(), { addSuffix: true });
-    } catch (error) {
+    } catch (_) {
       return 'recently';
     }
   };
@@ -182,7 +182,7 @@ export default function BlogPost() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
               <p className="text-lg font-semibold mb-2">Article not found</p>
-              <p className="mb-4">The article you're looking for may have been removed or doesn't exist</p>
+              <p className="mb-4">The article you&apos;re looking for may have been removed or doesn&apos;t exist</p>
               <Link 
                 href="/blog" 
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

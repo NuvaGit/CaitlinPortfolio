@@ -45,7 +45,7 @@ const About = () => {
                 <div className="relative w-full h-64 rounded-lg overflow-hidden">
                   <Image
                     src="/images/caitlin.jpeg"
-                    alt="Caitlin O'Brien"
+                    alt="Caitlin O&apos;Brien"
                     width={300}
                     height={300}
                     className="w-full h-full object-cover rounded-lg shadow-lg"
@@ -55,7 +55,7 @@ const About = () => {
               </div>
               
               <div className="p-8 md:w-2/3">
-                <h2 className="mb-4 text-3xl font-bold text-blue-50">Caitlin O'Brien</h2>
+                <h2 className="mb-4 text-3xl font-bold text-blue-50">Caitlin O&apos;Brien</h2>
                 <p className="mb-6 font-medium text-blue-200">Law with Politics Graduate | Legal Professional</p>
                 
                 <div className="space-y-4">
@@ -176,7 +176,7 @@ const About = () => {
 
           {/* LinkedIn CTA */}
           <div className="p-8 mt-12 text-center bg-white/10 backdrop-blur-sm rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl hover:bg-white/15">
-            <h3 className="mb-4 text-2xl font-bold text-white">Let's Connect</h3>
+            <h3 className="mb-4 text-2xl font-bold text-white">Let&apos;s Connect</h3>
             <p className="mb-6 text-blue-100">
               Interested in discussing legal opportunities or collaborations? Feel free to reach out.
             </p>
@@ -189,7 +189,7 @@ const About = () => {
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
               </svg>
-              Let's Connect
+              Let&apos;s Connect
             </a>
           </div>
         </div>

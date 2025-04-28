@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-page-custom-font */
 import './globals.css';
 import type { Metadata } from 'next';
-// Remove the unused Script import
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import AuthProvider from '@/components/auth/AuthProvider';
@@ -26,13 +25,11 @@ export default function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
         />
-
         {/* Load Inter via link instead of Next.js font system */}
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-
         {/* Material Icons for the editor */}
         <link
           href="https://fonts.googleapis.com/icon?family=Material+Icons"

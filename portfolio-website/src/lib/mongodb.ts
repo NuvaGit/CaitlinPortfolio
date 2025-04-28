@@ -13,18 +13,25 @@ if (!MONGODB_URI) {
  * in development. This prevents connections growing exponentially
  * during API Route usage.
  */
+// Define the mongoose connection type
+interface MongooseConnectionCache {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
 declare global {
-  var mongooseConnection: {
-    conn: typeof mongoose | null;
-    promise: Promise<typeof mongoose> | null;
-  };
+  // eslint-disable-next-line no-var
+  var mongooseConnection: MongooseConnectionCache;
 }
 
-let cached = global.mongooseConnection;
+// Use module-scoped variable instead of global
+let cached: MongooseConnectionCache;
 
-if (!cached) {
-  cached = global.mongooseConnection = { conn: null, promise: null };
+// Initialize the cached connection
+if (!global.mongooseConnection) {
+  global.mongooseConnection = { conn: null, promise: null };
 }
+cached = global.mongooseConnection;
 
 async function connectToDatabase() {
   if (cached.conn) {

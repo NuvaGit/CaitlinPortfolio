@@ -14,7 +14,7 @@ const BlogCard = ({ post }: BlogCardProps) => {
   const formatDate = (dateString: string) => {
     try {
       return formatDistance(new Date(dateString), new Date(), { addSuffix: true });
-    } catch (_unused) { // Use _unused to indicate intentionally unused parameter
+    } catch (_) { // Use underscore to indicate intentionally unused parameter
       return 'recently';
     }
   };
