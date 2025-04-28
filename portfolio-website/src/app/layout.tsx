@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-page-custom-font */
 import './globals.css';
 import type { Metadata } from 'next';
-// import Script from 'next/script';
+// Remove the unused Script import
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import AuthProvider from '@/components/auth/AuthProvider';

@@ -1,4 +1,7 @@
-import NextAuth from "next-auth";
+// File: src/types/next-auth.d.ts
+
+// We're removing the unused import
+// import NextAuth from "next-auth";
 
 declare module "next-auth" {
   /**

@@ -99,7 +99,12 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'top-4' : 'top-0'}`} style={{animation: scrolled ? 'slideDown 0.5s ease-out' : 'none'}}>
+    <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'top-4' : 'top-0'}`} 
+         style={{
+           animationName: scrolled ? 'slideDown' : 'none',
+           animationDuration: '0.5s',
+           animationTimingFunction: 'ease-out'
+         }}>
       <div className={`mx-auto transition-all duration-500 ${scrolled ? 'max-w-6xl px-4 sm:px-6 py-2' : 'max-w-full px-0 py-0'}`}>
         <div
           className={`flex items-center justify-between backdrop-blur-sm transition-all duration-300 ease-in-out ${
@@ -112,7 +117,7 @@ const Navbar = () => {
           <div className="flex items-center px-6">
             <Link href="/" className="flex items-center">
               <span className="font-bold transition-all duration-300 text-white text-xl tracking-wide relative overflow-hidden group">
-                <span className="bg-clip-text bg-gradient-to-r from-blue-300 to-purple-400 hover:from-blue-200 hover:to-purple-300 transition-all duration-500">Caitlin O'Brien</span>
+                <span className="bg-clip-text bg-gradient-to-r from-blue-300 to-purple-400 hover:from-blue-200 hover:to-purple-300 transition-all duration-500">Caitlin O&apos;Brien</span>
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-400 to-purple-500 group-hover:w-full transition-all duration-500 ease-in-out"></span>
               </span>
             </Link>
@@ -141,7 +146,7 @@ const Navbar = () => {
             </a>
             
             {/* Admin Link (if admin) */}
-            {session?.user?.role === 'admin' && (
+            {((session?.user as { role?: string })?.role) === 'admin' && (
               <Link 
                 href="/admin" 
                 className="text-sm font-medium px-4 py-2 rounded-md transition-all duration-300 bg-gray-700 hover:bg-gray-600 text-white hover:text-white mr-3"
@@ -193,7 +198,13 @@ const Navbar = () => {
                   href={item.href}
                   onClick={(e) => item.targetId ? handleNavLinkClick(e, item.targetId, item.isExternal, item.href) : undefined}
                   className="block rounded-md px-4 py-2.5 text-base font-medium text-white hover:bg-gray-700/70 dark:hover:bg-gray-800/70 hover:translate-x-1 transform transition-all duration-300 ease-out"
-                  style={{animation: isMenuOpen ? 'fadeIn 0.5s ease-out forwards' : 'none', animationDelay: `${index * 75}ms`}}
+                  style={isMenuOpen ? {
+                    animationName: 'fadeIn',
+                    animationDuration: '0.5s',
+                    animationTimingFunction: 'ease-out',
+                    animationFillMode: 'forwards',
+                    animationDelay: `${index * 75}ms`
+                  } : {}}
                 >
                   {item.name}
                 </Link>
@@ -206,7 +217,7 @@ const Navbar = () => {
                 Get in Touch
               </a>
               
-              {session?.user?.role === 'admin' && (
+              {(session?.user as { role?: string })?.role === 'admin' && (
                 <Link 
                   href="/admin"
                   className="block rounded-md px-4 py-2.5 text-base font-medium text-white hover:bg-gray-700/70 dark:hover:bg-gray-800/70 hover:translate-x-1 transform transition-all duration-300"

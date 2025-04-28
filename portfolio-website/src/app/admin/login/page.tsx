@@ -7,13 +7,13 @@ import { useRouter } from 'next/navigation';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errorMessage, setErrorMessage] = useState(''); // Renamed to avoid linting error
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErrorMessage('');
     setLoading(true);
 
     try {
@@ -24,14 +24,14 @@ export default function Login() {
       });
 
       if (result?.error) {
-        setError('Invalid email or password');
+        setErrorMessage('Invalid email or password');
         setLoading(false);
       } else {
         router.push('/admin');
       }
     } catch (err) {
       console.error(err);
-      setError('An error occurred. Please try again.');
+      setErrorMessage('An error occurred. Please try again.');
       setLoading(false);
     }
   };
@@ -77,9 +77,9 @@ export default function Login() {
             </div>
           </div>
 
-          {error && (
+          {errorMessage && (
             <div className="text-red-500 text-sm text-center">
-              {error}
+              {errorMessage}
             </div>
           )}
 

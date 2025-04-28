@@ -17,7 +17,7 @@ const LatestBlog = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [backgroundElements, setBackgroundElements] = useState<React.ReactElement[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Format date for display
   const formatDate = (dateString: string | undefined): string => {
@@ -60,10 +60,10 @@ const LatestBlog = () => {
         setLoading(true);
         const response = await axios.get('/api/posts?limit=3');
         setPosts(response.data);
-        setError(null);
+        setErrorMessage(null);
       } catch (err) {
         console.error('Error fetching latest blog posts:', err);
-        setError('Failed to load latest blog posts');
+        setErrorMessage('Failed to load latest blog posts');
       } finally {
         setLoading(false);
       }
@@ -73,15 +73,6 @@ const LatestBlog = () => {
   }, []);
 
   // Extract excerpt from content if needed
-  interface Post {
-    excerpt?: string;
-    content: string;
-    _id?: string;
-    slug?: string;
-    title?: string;
-    createdAt?: string;
-  }
-  
   const getExcerpt = (post: Post): string => {
     if (post.excerpt) return post.excerpt;
     // Strip HTML tags and limit to ~100 characters
@@ -116,9 +107,9 @@ const LatestBlog = () => {
               </svg>
             </div>
           </div>
-        ) : error ? (
+        ) : errorMessage ? (
           <div className="bg-red-500/20 backdrop-blur-sm p-6 rounded-xl text-center mb-10">
-            <p className="text-white">{error}</p>
+            <p className="text-white">{errorMessage}</p>
           </div>
         ) : posts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">

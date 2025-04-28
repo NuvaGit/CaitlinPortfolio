@@ -97,6 +97,10 @@ const Experience = () => {
   }, []);
 
   useEffect(() => {
+    // Capture current refs values to use in cleanup
+    const currentTimelineRefs = timelineRefs.current.map(ref => ref.current);
+    const currentEducationRef = educationRef.current;
+    
     // Observer callback function
     const observerCallback = (entries: IntersectionObserverEntry[], observer: IntersectionObserver) => {
       entries.forEach(entry => {
@@ -118,26 +122,26 @@ const Experience = () => {
     });
 
     // Observe timeline items
-    timelineRefs.current.forEach(ref => {
-      if (ref.current) {
-        observer.observe(ref.current);
+    currentTimelineRefs.forEach(ref => {
+      if (ref) {
+        observer.observe(ref);
       }
     });
 
     // Observe education section
-    if (educationRef.current) {
-      observer.observe(educationRef.current);
+    if (currentEducationRef) {
+      observer.observe(currentEducationRef);
     }
 
     // Clean up
     return () => {
-      timelineRefs.current.forEach(ref => {
-        if (ref.current) {
-          observer.unobserve(ref.current);
+      currentTimelineRefs.forEach(ref => {
+        if (ref) {
+          observer.unobserve(ref);
         }
       });
-      if (educationRef.current) {
-        observer.unobserve(educationRef.current);
+      if (currentEducationRef) {
+        observer.unobserve(currentEducationRef);
       }
     };
   }, []);
