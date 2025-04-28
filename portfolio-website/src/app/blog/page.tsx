@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -7,7 +7,8 @@ import { Post } from '@/types/index';
 import { formatDistance } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
 
-export default function Blog() {
+// Create a separate component that uses searchParams
+function BlogContent() {
   const searchParams = useSearchParams();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,5 +206,41 @@ export default function Blog() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading fallback for Suspense
+function BlogLoading() {
+  return (
+    <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen pt-24 pb-16">
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Articles</h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Research and insights on law, property, and professional development.
+            </p>
+          </div>
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4">
+              <svg className="animate-spin w-full h-full text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            </div>
+            <p className="text-lg text-gray-600">Loading articles...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function Blog() {
+  return (
+    <Suspense fallback={<BlogLoading />}>
+      <BlogContent />
+    </Suspense>
   );
 }
